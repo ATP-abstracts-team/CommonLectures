@@ -1,0 +1,1048 @@
+%% LyX 2.1.1 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T2A,T1]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=1cm,rmargin=1cm}
+\usepackage{amsthm}
+\usepackage{amsmath}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+\DeclareRobustCommand{\cyrtext}{%
+  \fontencoding{T2A}\selectfont\def\encodingdefault{T2A}}
+\DeclareRobustCommand{\textcyr}[1]{\leavevmode{\cyrtext #1}}
+\AtBeginDocument{\DeclareFontEncoding{T2A}{}{}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
+  \theoremstyle{definition}
+  \newtheorem{xca}{\protect\exercisename}[section]
+  \theoremstyle{definition}
+  \newtheorem{example}{\protect\examplename}[section]
+  \theoremstyle{plain}
+  \newtheorem{cor}{\protect\corollaryname}[section]
+\newenvironment{lyxcode}
+{\par\begin{list}{}{
+\setlength{\rightmargin}{\leftmargin}
+\setlength{\listparindent}{0pt}% needed for AMS classes
+\raggedright
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\normalfont\ttfamily}%
+ \item[]}
+{\end{list}}
+  \theoremstyle{remark}
+  \newtheorem{note}{\protect\notename}
+  \theoremstyle{remark}
+  \newtheorem{rem}{\protect\remarkname}[section]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage[all]{xy}
+\usepackage{pgf,tikz}
+\usepackage{mathrsfs}
+\usetikzlibrary{arrows}
+
+\makeatother
+
+\usepackage{babel}
+\usepackage{listings}
+  \providecommand{\examplename}{Example}
+  \providecommand{\exercisename}{Exercise}
+  \providecommand{\notename}{Note}
+  \providecommand{\remarkname}{Remark}
+\providecommand{\corollaryname}{Corollary}
+\renewcommand{\lstlistingname}{Listing}
+
+\begin{document}
+
+\title{Функциональное программирование}
+
+
+\author{Akhtyamov Pavel}
+
+\maketitle
+
+\section{Деревья}
+
+
+\subsection{Деревья общего вида}
+
+Деревья используются в структурах данных (к примеру, для двоичного
+поиска), в синтаксическом анализе, и у них различная структура.
+
+Дерево - элемент типа $T$ + список деревьев типа $T$.
+
+\begin{lstlisting}
+let rec map f = function
+| Leaf(x) -> Leaf(f x)
+| Node(x, l) -> Node(f x, List.map (map f) l)
+\end{lstlisting}
+
+
+Fold (правая свертка, раскрывается снизу вверх)
+
+\begin{lstlisting}
+let rec fold f i = function
+| Leaf(x) -> f i x
+| Node(x, l) -> l |> List.fold (fold f) (f i x)
+\end{lstlisting}
+
+\begin{xca}
+Отображение - отрубить листья у дерева.\end{xca}
+\begin{example}
+Абстрактное синтаксическое дерево
+
+\begin{lstlisting}
+type 't Expr = 
+| Add of 't * Expr * 't Expr
+| Sub of 't * Expr * 't Expr
+| Mul of 't * Expr * 't Expr
+| Div of 't * Expr * 't Expr
+| Neg of 't * Expr
+| Value of 't
+
+let rec compute = function
+| Add(x, y) -> compute x + compute y
+| Sub(x, y) -> compute x - compute y
+| Mul(x, y) -> compute x * compute y
+| Div(x, y) -> compute x / compute y
+| Neg(x) -> -compute x
+| Value(x) -> x
+\end{lstlisting}
+
+
+Как построить по списку дерево? Для этого есть разбор выражения в
+дерево. На вход получить поток, взять столько, сколько смогло сработать
+(а затем вернуть оставшуюся часть). Возвращается дерево и хвост, который
+не обработан.
+\end{example}
+\begin{lstlisting}
+let mknode = function
+| '+' -> Add
+| '-' -> Sub
+| '*' -> Mul
+| '/' -> Div
+
+let parse_infix expr = 
+	let rec ff = function
+	| [] -> failwith "Error"
+	| h::t when isDigit -> parse
+	| h::t when h= ' ' -> ff t
+	| h::t when h='~' -> // negate
+		...
+	| h::t -> ... // binary
+\end{lstlisting}
+
+
+Дерево может порождаться функцией (в не чисто функциональных языках).
+
+
+\subsection{Двоичные деревья}
+
+Двоичное дерево представляется в виде узла и двух детей.
+
+Есть несколько обходов двоичного дерева:
+\begin{itemize}
+\item Префиксный
+\item Инфиксный
+\item Постфиксный
+\end{itemize}
+Можно заменить энергичные вычисления на ленивые (см. код).
+
+Двоичное дерво - все элементы меньше --- слева, больше --- справа
+
+Хвостовая рекурсия для дерева: вроде бы невозможно (нет линейности).
+Но используется подход продолжения.
+
+\begin{lstlisting}
+let plus1 x f = f(x+1)
+let times2 x f = f (x*2)
+plus1 1 (fun x -> times 2 x (printfn "%d")) // order way used
+\end{lstlisting}
+
+
+Иногда удобно использовать аккумулятор вкупе с продолжением (для левого
+поддерева считаем, для правого --- запоминаем, что должны вычислить).
+\begin{cor}
+Таким образом, хотя и дереьев нет в библиотеке, они позволяют организовать
+достаточно интересные и богатые структуры данных.
+\end{cor}
+
+\section{Погружение в функциональную составляющую}
+
+Очередь на списке --- это плохо (необходим кольцевой список). Надо
+придумывать реализацию (Chris Okazaki). Нам надо помещать быстро элемент
+в очередь и изымать начало. Подойдет реализация на двух стеках. Перестройка
+амортизационно идет за $O(1)$.
+
+\begin{lstlisting}
+let tail(L,R) = 
+match L with
+| [x] -> (List.rev R, [])
+| h::t -> (t, R)
+\end{lstlisting}
+
+
+Рассмотрим ZipperList (двунаправленный список с выделенным текущим
+элементом, реализация --- alt+Tab и машина Тьюринга).
+
+$Zipper$ может рассматриваться не только на списках, но и на других
+структурах, в частности, на дереве (написать get для последовательности
+элементов). Далее хотим, чтобы элемент был доступен корню (идея ---
+поддерево будет перекидываться в левый список), т.е идем налево ---
+запоминаем правое поддерево и наоборот. Таким образом, аналог $Zipper$
+--- устройство директорий в проводнике.
+
+$Zipper$ подчиняются дифференцированию: если $T(A,R)=1+A*R*R$, то
+тогда $Z=2*A*R$, где $2=Left|Right$, $A$ --- сохраняемый корневой
+элемент, $B$ --- путь.
+
+
+\subsection{Числовые структуры данных}
+
+Сложение можно ассоциировать со списками и, к примеру, ординалами.
+При этом сложение будет выполняться за $O(n)$. Но в десятичной системе
+числа складывать удобнее. Числовые структуры данных напоминают числа
+и группировку данных по образцу. Оптимальная позиционная система счисления
+--- по основанию $e$. Но используют двоичные списки.
+
+\begin{lstlisting}
+type 'a blist = 
+| Nil
+| Zero of ('a*'a) blist
+| One of 'a * ('a * 'a) blist
+\end{lstlisting}
+
+
+Nil --- 0
+One (1, Nil) ---1
+Zero(One (1,2), Nil) ---2, и т.д.
+
+
+\subsection{Замыкания}
+
+Рассмотрим функцию вычисления производной:
+
+\begin{lstlisting}
+let deriv f (dx: float) = 
+	fun x -> (f(x + dx) - f(x))/dx
+\end{lstlisting}
+
+
+Но проблемы в том, что $f$ и $dx$ запомнились. В итоге, в функциональных
+языках мы можем пользоваться функциями с внутренними состояниями.
+А когда можно забыть переменную, которую мы захватили? Нужен $Garbage\ Collector$!
+Но замыкания достаточно сложно реализуемы.
+
+Как можно пользоваться замыканиями?
+
+В $F\#$ есть механизм, позволяющий использовать динамическое связывание.
+
+\begin{lstlisting}
+let mutable x = 4
+let adder y = x + y
+adder 1
+x <- 3
+adder 1
+\end{lstlisting}
+Из примера видно, что сохраняется ссылка.
+
+Замыкание возникает при частичном применении функции. При $(+)\ 1$
+есть ссылка на библиотечную функцию.
+
+Рассмотрим специализацию:
+
+Программа: $P:I\rightarrow O$.
+
+Interpreter: $Source\rightarrow Input\rightarrow Output$
+
+Compiled=$(Interpreter\ Source):\ Input\rightarrow Output$. На таком
+подходе $Futamura\ Projection$ возник подход суперкомпляции (лазить
+внутри кода и оптимизация в нем).
+
+
+\subsection{Генераторы}
+
+Файл больше самого большого массива (ибо нам надо последовательный
+участок памяти). Но ведь можно считать все посимвольно, и возникает
+понятие генератора (производить последовательность вычислений, возможно,
+бесконечную). Это можно реализовать на императивно-функциональном
+языка (взято с $Lisp$).
+
+\begin{lstlisting}
+type cell = {mutable content: int}
+let new_counter n =
+	let x = {content = n} in
+	fun () -> (x.content <- x.conten + 1; x.content)
+\end{lstlisting}
+
+
+Можно использовать $ref$. Счетчик --- частный случай генератора.
+
+\begin{lstlisting}
+let new_generator fgen init = 
+	let x = ref init in
+	fun () -> (x:= fgen |x; |x)
+
+let fib = new_generator (fun(u,v) -> (u+v, u)) (1,1) // pairs
+
+let map f g = fun() -> f(g())
+let fibs = (fib |> map fst)
+\end{lstlisting}
+
+
+Можно описать функцию $filter$.
+
+С помощью генераторов можно генерировать бесконечные последовательности.
+
+
+\section{Монады}
+
+Монады необходимы, к примеру, для организации ввода-вывода (технология
+была создана в 1991 году).
+
+К примеру, есть куча проверок на $null$. 
+\begin{lyxcode}
+let~read()~=~
+\begin{lyxcode}
+printf~``>''
+
+let~s~=~Console.Readline()
+
+try
+\begin{lyxcode}
+Some(int(s))
+\end{lyxcode}
+with
+\begin{lyxcode}
+\_~->~None
+\end{lyxcode}
+\end{lyxcode}
+\end{lyxcode}
+Для сложения двух чисел в таком коде необходимо выполнить много проверок
+(если надо было бы складывать 10 чисел, то получилось плохо). Хотелось
+бы ввести число, сложить его, и так далее (отделить смысловой алгоритм
+от промежуточных проверок).
+\begin{lyxcode}
+let~bind~a~f~=~
+\begin{lyxcode}
+if~a~=~None~then~None
+
+else~f~(a.Value)
+\end{lyxcode}
+bind~(read())~(fun~x~->~bind~(read())~(fun~y~->~Some(x~+~y))
+\end{lyxcode}
+Или
+\begin{lyxcode}
+let~(>\textcompwordmark{}>=)~a~f~=~
+\begin{lyxcode}
+if~a~=~None~then~None
+
+else~f~(a.Value)
+\end{lyxcode}
+read()~>\textcompwordmark{}>=~fun~x~->~read()~>\textcompwordmark{}>=~fun~y~->~Some(x~+~y)
+\end{lyxcode}
+Код был приведен к простому виду.
+
+Недетерминированные вычисления: Вася 2000 года рождения, Петя в два,
+либо в 3 раза старшу, а Лена на год старше Пети. Сколько лет Лене?
+\begin{lyxcode}
+let~(>\textcompwordmark{}>=)~mA~f~=~List.collect~f~mA
+
+{[}10;11{]}~>\textcompwordmark{}>=~(fun~x~->~{[}x{*}2;~x{*}3{]})~>\textcompwordmark{}>=~(fun~x~->~{[}x+1{]})
+\end{lyxcode}
+Как видно, что обработка скинута в bind.
+
+Можно ввести операции типа return:
+\begin{lyxcode}
+let~ret~x~=~{[}x{]}
+
+let~ret'~x~=~x
+
+let~fail~=~{[}{]}
+
+ret'~{[}10;11{]}~>\textcompwordmark{}>=~(fun~x~->~ret'~{[}x{*}2;x{*}3{]})~>\textcompwordmark{}>=~(fun~x~->~ret~(x~+~1))
+\end{lyxcode}
+Перейдем к определению монад:
+\begin{itemize}
+\item Для каждого базового типа есть обрамляющий тип M<t>
+\item Есть операция return: 't -> M<'t>
+\item Есть операция композиции bind:
+
+\begin{itemize}
+\item $>>=:M<'a>\rightarrow(a->M<'b>)\rightarrow M<'b>$
+\end{itemize}
+\end{itemize}
+Таким образом, монады описывают последовательное применение вычислений,
+но логика спрятана внутри (можно спрятать всю магию в ``;'')
+
+Монада MayBe:
+\begin{lyxcode}
+//type~'t~option
+
+return~x~=~Some(x)
+
+bind~//аналогично~первому~примеру
+\end{lyxcode}
+Монады должна удовлетворять свойствам:
+\begin{lyxcode}
+return~x~>\textcompwordmark{}>=~f~$\equiv$~f~x
+
+m~>\textcompwordmark{}>=~return~$\equiv$~m
+
+(m~>\textcompwordmark{}>=~f)~>\textcompwordmark{}>=g~$\equiv$~m~>\textcompwordmark{}>=~($\lambda$x.fx~->~g(x))~//~ассоциативность~выполнения~операций
+\end{lyxcode}
+Как спрятать это дело от пользователя в F\#:
+\begin{lyxcode}
+let~r~=~nondet~\{
+\begin{lyxcode}
+let!~vasya~=~{[}14;15{]}
+
+let!~petya~=~{[}2{*}vasya;~3{*}vasya{]}
+
+let~lena~~=~petya~+~1
+
+return~lena
+\end{lyxcode}
+\}
+\end{lyxcode}
+Весь bind запрятан в nondet (let' --- аналог ret')
+\begin{lyxcode}
+type~NonderBuilder()~=~
+\begin{lyxcode}
+number~b.Return(x)~=~ret~x
+
+number~b.ReturnFrom(x)~=~ret'~x
+
+number~b.Bind(mA,~f)~=~ma~>\textcompwordmark{}>=~f
+\end{lyxcode}
+let~nondet~=~new~NondetBuilder()
+\end{lyxcode}
+Помимо return и bind, можно описывать другие свойства (можно определить
+удаление списка)
+\begin{lyxcode}
+let~rec~remove~x~l~=~
+\begin{lyxcode}
+nondet~\{
+\begin{lyxcode}
+if~l~=~{[}{]}~then~return~{[}{]}
+
+else
+\begin{lyxcode}
+if~(List.head~l)~=~x~then~return~(List)...~//нет~else~->~реализуется~через~zero
+\end{lyxcode}
+\end{lyxcode}
+\}
+\end{lyxcode}
+\end{lyxcode}
+С помощью монад можно решать логические задачи (задача про льва и
+единорога: можно перебрать все дни). 
+\begin{itemize}
+\item Надо получить тройку для вчерашнего дня
+\item Проверить выражение на правдивость
+\item Совершить решение:\end{itemize}
+\begin{lyxcode}
+nondet~\{
+\begin{lyxcode}
+let~(l,e,d)~=~data
+
+let~(l1,~e1,~d1)~=~prev~(true,~true,~``sun'')~(fun(\_,\_,x)~->~x~=~d)~data
+
+if~(realday~l~false)~=~l1~\&\&~(realday~e~false)~=~e1~then~return~(l,e,d)
+\end{lyxcode}
+\}~
+\end{lyxcode}
+По сути, мы решили задачу, которую можно решать в логической парадиме.
+
+Рассмотрим примеры классических монад:
+
+а) Монады ввода-вывода --- состояние ввода и вывода есть пара списков
+\begin{lyxcode}
+type~State~=~string~list~{*}~string~list
+\begin{lyxcode}
+type~IO~<'t>~=~'t{*}State
+
+let~print(t:string)~((I,O):State)~=~(t,~(I,~t::O))
+
+read~((I,O):state)~//~передвижение~каретки
+\end{lyxcode}
+\end{lyxcode}
+б) Монады состояния: пример --- проход по дереву (тупая реализация
+--- протаскивать глобальную переменную). С помощью state можно протащить
+все данные внутри:
+\begin{lyxcode}
+State<'t>~=~'s~->~'t~{*}~'s
+
+return~x~=~fun~s~->~x,~s
+
+let~(>\textcompwordmark{}>=)~x~f~=~(fun~s0~->~let~a,~s~=~x~s0;~f~a~s)
+
+let~getState~=~(fun~s~->~s,~s)
+
+let~setState~s~=~(fun~\_~->~(),~s)
+
+//do!~-~отбросить~unit~-~setState~пишется~с~do
+\end{lyxcode}
+в) Вычисления с продолжениями (скинуть хвостовую рекурсию в дереве
+или определить порядок вычислений в ленивом языке) --- можно сказать,
+что не надо возвращаться
+\begin{lyxcode}
+let~(>\textcompwordmark{}>=)~x~f~=~x~f
+
+read~>\textcompwordmark{}>=~double~>\textcompwordmark{}>=~print~>\textcompwordmark{}>=~(fun~x~->~x)
+\end{lyxcode}
+Быстрая сортировка с хвостовой рекурсией:
+\begin{lyxcode}
+let~qsort~list~=~
+\begin{lyxcode}
+let~rec~sort~list~cont~=~
+\begin{lyxcode}
+match~list~with
+
+|~{[}{]}~->~cont~{[}{]}
+
+|~x::xs~->~
+\begin{lyxcode}
+let~l,r~=~
+\begin{lyxcode}
+List.partition~((>)~x~)~xs
+\end{lyxcode}
+sort~l~(fun~ls~->~sort~r~(fun~rs~->~cont(ls~@~(x::rs))))
+\end{lyxcode}
+\end{lyxcode}
+sort~list~(fun~x~->~x)
+\end{lyxcode}
+\end{lyxcode}
+Но выглядит это не очень красиво. Надо прятать в монаду продолжения:
+\begin{lyxcode}
+let~qsort~list~=~
+\begin{lyxcode}
+let~rec~sort~list~=
+\begin{lyxcode}
+cont~\{
+\begin{lyxcode}
+match~list~with
+
+|~{[}{]}~->~return~{[}{]}
+
+|~x::xs~->~
+\begin{lyxcode}
+let~l,r~=~
+\begin{lyxcode}
+List.partition~((>)~x~)~xs
+\end{lyxcode}
+let!~ls~=~sort~l
+
+let!~rs~=~sort~r
+
+return~ls~@~(x::rs)
+\end{lyxcode}
+\end{lyxcode}
+\}
+\end{lyxcode}
+sort~list~(fun~x~->~x)
+\end{lyxcode}
+\end{lyxcode}
+По сути, нехвостовая рекурсия заменена по внешнему виду на хвостовую,
+но с протаскиванием монады.
+
+\textbf{Рассмотрим монадические парсеры.}
+
+Как решаются задачи разбора текста:
+\begin{itemize}
+\item По тексту строится синтаксическое дерево
+\item Правила задаются с помощью грамматики
+\item Возможные подходы:
+
+\begin{itemize}
+\item Лексический анализатор -> синтаксический анализатор
+\item Руками
+\item Монадический парсер (складываются из кусков - fparsec)
+\end{itemize}
+\end{itemize}
+\begin{lyxcode}
+let~pair~=~parse~\{
+\begin{lyxcode}
+let!~\_~=~str\_ws~``(``
+
+let!~n1~=~int\_ws
+
+let!~\_~=~str\_ws~``,''
+
+...
+\end{lyxcode}
+\}
+
+let~str\_ws~str~=~parse~\{
+\begin{lyxcode}
+do!~skipString~str
+
+do!~spaces
+
+return~()
+\end{lyxcode}
+\}
+
+let~int\_ws~=~parse~\{
+\begin{lyxcode}
+...
+\end{lyxcode}
+\}
+\end{lyxcode}
+
+\subsection{Параллельные и асинхронные вычисления}
+
+В функциональных языках можно вычислять что-то параллельно удобным
+образом. Но, в целом, средства из коробки реализовать сложно (в Haskell,
+к примеру).
+
+Можно параллелить вручную: ставить Semaphore, Locks, etc. Есть расширения
+из .NET.
+
+Основные проблемы асинхронных и параллельных вычислений:
+\begin{itemize}
+\item Общая память (решается легко в функциональных языках)
+\item Инверсия управления (надо вызывать функцию в функцией и т.д.)
+\end{itemize}
+В F\# есть Asynchronous Workflows:
+\begin{lyxcode}
+let~task1~=~async~\{return~10~+~10\}
+
+let~task2~=~async~\{return~20~+~20\}
+
+Async.RunSynchronously~\{Asyc.Parallel~{[}task1;~task2{]}\}
+
+let~map'~func~items~=
+\begin{lyxcode}
+let~tasks~=~
+\begin{lyxcode}
+seq~\{
+\begin{lyxcode}
+for~i~in~items~->~async~\{~return~(func~i)~\}
+\end{lyxcode}
+\}
+\end{lyxcode}
+Async.RunSynchronously~(Async.Parallel~tasks)
+\end{lyxcode}
+\end{lyxcode}
+В обычных языках код плохой: создавать каждый раз поток. Но в F\#
+есть планировщик потоков, который не создает новые потоки, а раздает
+потокам задания.
+
+Асинхронность вкладывается в данный контекст:
+\begin{lyxcode}
+let~httpAsync(url:string)~=
+
+async~\{
+\begin{lyxcode}
+let~req~=~WebRequest.Create(url)
+
+let!~resp~=~req.AsyncGetResponse()
+
+use~stream~=~resp.GetResponseStream()
+
+use~reader~=~new~StreamReader(stream)
+
+let!~text~=~Async.SwaitTask(reader.ReadToEndAsync())
+
+return~text
+\end{lyxcode}
+\}
+\end{lyxcode}
+Async имеет монадический синтаксис (хороший синтаксис продолжения).
+Реализация будет короче и проще, чем в C\#. Таким образом, решена
+проблема инверсии.
+
+Асинхронное чтение с диска:
+\begin{lyxcode}
+let~Readfile~fn~
+
+let~goodfiles
+
+let~goodsplit
+
+let~wc~s~=~s~|>~goodsplit~|>~Seq.filter(fun~s~->~s.Length~>~0)~|>~Seq.length~
+
+goodfiles~|>~Seq.map~(fun~f~->~(f,~wc~f))~|>~Seq.toArray
+
+let~ReadfileAsync~fn~//заменить~read~на~asyncRead
+
+goodfiles~
+\begin{lyxcode}
+|>~Seq.map~(fun~f~->~async~\{
+\begin{lyxcode}
+let!~s~=~ReadFileAsync~f
+
+return~(f,~wc~s)
+
+\})
+\end{lyxcode}
+|>~Async.Parallel
+
+|>~Async.RunSyncronously
+\end{lyxcode}
+\end{lyxcode}
+Программа проработала очень быстро.
+
+Проблема: задачи распараллеливаются, если уже есть массив данных.
+Но в реальной жизни бывает не так: есть сложная система, возникает
+проблема масштабирования. Можно использовать паттерн Agent.
+\begin{lyxcode}
+let~rec~agent~=~MailboxProcessor.Start(fun~inbox~->
+\begin{lyxcode}
+let~rec~loop()~=~async~\{
+\begin{lyxcode}
+let!~msg~=~...
+
+return!~loop()
+\end{lyxcode}
+\}
+
+loop()
+\end{lyxcode}
+)
+\end{lyxcode}
+Как написать Crawl?
+\begin{lyxcode}
+let~GetLinks~s~=~
+
+let~Crawl~url~=~
+\begin{lyxcode}
+async~\{
+\begin{lyxcode}
+let!~s~=~httpAsync~url
+
+return~GetLinks~s
+\end{lyxcode}
+\}
+\end{lyxcode}
+let~CrawlAgent~=~MailboxProcessor.Start(fun~inbox~->
+\begin{lyxcode}
+let~rec~loop()~=~sync~\{
+\begin{lyxcode}
+let!~msg~=~inbox.Receive()
+
+let!~res~=~Crawl~msg
+
+res~|>~Seq.iter~(fun~x~->~CrawlerAgent.Post~x)
+
+return!~loop()
+\end{lyxcode}
+\}
+
+loop()
+\end{lyxcode}
+)
+
+let~Dispatcher~n~f~=~//~параллельный~планировщик~агентов,~который~обрабатывает~пул~сообщений
+\end{lyxcode}
+Таким образом, монады дают прекрасный способ описывать параллельные
+вычисления.
+\begin{xca}
+Написать частотный словарь Рунета (можно красиво написать на основе
+реактивного программирования).
+\end{xca}
+Иногда можно вычислять параллельные задачи на облаке (кластерах).
+Есть проект \{m\}brace, который помогает рассмотреть данный вопрос.
+Для этого есть монада cloud. На кластере есть специальный подход к
+вычислениям, который воспринимается им при помощи программы. (m-brace.net,
+briskengine.com). Такой кластер можно развернуть на Microsoft Azure.
+
+Можно это сделать другим образом (при помощи CloudFlow). Здесь использована
+идея Map-Reduce, которая хорошо используется на облачных серверах. 
+
+Внутренние переменные внутри cloud автоматически загружаются в облако
+(чеерз cloudFlow можно загрузить все вручную).
+
+
+\section{Реактивное функциональное программирование}
+
+В прошлом разделе мы написали Crawl, который индексирует веб-сайты.
+В нем использовался паттерн Agent. Как измерить доброту Интернета?
+Не очень красивое решение: можно запилить функцию (но функцию надо
+будет менять). 
+
+Есть некоторые механизмы обработки:
+\begin{itemize}
+\item списки; (обработка в памти)
+\item последовательности; (применять вытаскивание следующего элемента)
+\item потоки; (вызов функциии на каждом элементе)\end{itemize}
+\begin{lyxcode}
+type~Stream<'T>~=~('T~->~unit)~->~unit
+\end{lyxcode}
+По сути, данные передаются в поток, а затем применяются функции (причем
+про input мы не знаем информации).
+
+Поэтому хочется, чтобы Crawler возвращал поток.
+
+Реактивное программирование --- парадигма, ориентированнная на потоки
+данных и распространение изменений, типичный пример --- таблицы в
+Excel. Reactive Manifesto --- реактивный стиль в классических языках
+программирования.
+
+Реактивное функциональное программирование бывает дискретным и непрерывным.
+\begin{lyxcode}
+type~Crawler()~=~
+\begin{lyxcode}
+let~evt~=~new~Event<\_>()
+
+...
+\end{lyxcode}
+
+
+evt.Trigger~-{}-{}-~отправляет~события
+
+evt.Publish~-{}-{}-~подписка~(несколько~получателей~на~одно~событие).
+\end{lyxcode}
+Доброта Твиттера: создаем event, далее создаем listener, который получает
+данные в виде JSON (работа с которым хороша с помощью NewtonSoft.JSON).
+В данном случае в FSharpChart дается на вход Event, и она отображается
+в виде FSharpChart.FastLine
+
+Еще одним примером является естественный контроль движений руки (при
+помощи Kinect). На каждом шаге передаем фрейм с устройства и контроллер,
+можно посчитать скорость пальцев или тренажер пальцев при помощи функции
+Event.Scan (аккумулировать максимум). Еще можно посмотреть при помощи
+контроллера на 5 фреймов назад и проверять движения руки на жесты.
+
+При помощи Kinect можно получать результаты разных упражнений.
+
+Еще можно использовать реактивное программирование на облаке (каждый
+кластер обрабатывает данные, а затем их отдает на узел, который складывается
+в очередь и обрабатывается).
+
+Event --- самый простой вид обработки, но что делать, если возникают
+ошибки? В .NET есть Reactive Extensions: 
+\begin{lyxcode}
+IOObserver<T>(OnNext,~OnError),~IOObservable<T>
+\end{lyxcode}
+Как можно программировать робота? Сенсоры предоставляют Observable
+объекты:
+\begin{lyxcode}
+//init~models
+
+let~power~=~~sensor.ToObservable().Select(dist).DistinctUntilChanged()
+
+use~l~=~power.Subscribe(motorL)
+
+use~r~=~power.Subscribe(motorR)
+\end{lyxcode}
+На робот можно посылать данные с мобильных устройств (логика на клиенте,
+на роботе --- простая работа): подписываем первую координату на один
+мотор, вторую --- на другой мотор. Создается TrikPad, который позволяет
+по наклону руки получает данные, которые надо послать на робота.
+
+В итоге, реактивное программирование является хорошим способом создания
+надежных систем регаирования в реальном времени. Еще реактивный подход
+позволяет работать с потоками событий с использованием привычных примитивов.
+
+Хорошим примером является обработка событий с мышки в пользовательском
+интерфейсе, а еще есть хорошее применение в real-time анализе котировок.
+
+
+\section{Реализация функциональных языков программрования}
+
+Рассмотрим возможные реализации функциональных языков программирования.
+
+Функциональный язык представляет расширенный функционал относительно
+$\lambda$-исчисления. А здесь есть различия:
+\begin{itemize}
+\item Прямая интерпретация (хороша для энергичных языков и если не гонимся
+за производительностью языков)
+\item Редукция графов (изначально есть дерево, а далее идет редукция до
+необходимого состояния, иногда доходит до графов)
+\item Использование комбинаторов --- комбинаторная редукция
+\item Код абстрактной машины --- на их основе можно построить интерпретатор
+абстрактной машины (примеры SECD, .NET и т.п.)\end{itemize}
+\begin{lyxcode}
+type~Expr~=~
+\begin{lyxcode}
+|~App~of~Expr{*}Expr
+
+|~Lam~of~string{*}Expr
+
+|~Var~of~string
+
+|~Cons~of~string
+
+|~Clo~of~string{*}Expr{*}Env~//лямбда~с~захваченным~окружением
+\end{lyxcode}
+and~Env~=~Map<string,~Expr>
+
+let~text~=~App(App(Lam(``f'',~Lam(``x'',~App(var...)))))
+
+let~rec~eval~env~expr~=~
+
+match~expr~with~
+\begin{lyxcode}
+|~App(e1,~e2)~->
+\begin{lyxcode}
+let~f1~=~eval~env~e1
+
+let~f2~=~eval~env~e2
+
+match~f1~with
+\begin{lyxcode}
+|~Clo(x,~ex,~env')~->~eval(Map.add~x~f2~env')~ex~//~добавление~в~окружение
+
+|~Cons(x)~->~App(Cons(x),~f2)
+\end{lyxcode}
+\end{lyxcode}
+|~Var(x)~->~Map.find~x~env
+
+|~Cons(x)~->~Cons(x)
+
+|~Lam(x,~e)~->~Clo(x,~e,~env)
+\end{lyxcode}
+eval~Map.empty~text
+\end{lyxcode}
+В Lisp интерпретатор состоит из eval и apply:
+\begin{lyxcode}
+|~Let~of~id{*}expr{*}expr
+
+|~Pfunc~of~id~//~примитивная~функция
+
+|~Op~of~id{*}int{*}expr~list~//~отложенные~операции,~int~-{}-{}-~число~нехватаемых~выражений
+\end{lyxcode}
+Eval:
+\begin{lyxcode}
+let~rec~eval~exp~env~=~
+\begin{lyxcode}
+match~exp~with
+
+|~App(e1,~e2)~->~apply~(eval~e1~env)~(eval~e2~env)
+
+|~Int(n)~->~Int(n)
+
+|~Var(x)~->~Map.find~x~env
+
+|~PGunc(f)~->~Op(f,~arity~f,~{[}{]})
+
+...
+\end{lyxcode}
+let~apply~e1~e2~=~
+\begin{lyxcode}
+match~e1~with
+\begin{lyxcode}
+|~Closure(Lam(v,~e),~env)~->~eval~e~(Map.add~v~e2~env)
+
+|~Op(id,~n,~args)~->
+\begin{lyxcode}
+if~n~=~1~then~(funof~id)(args@{[}e2{]})
+
+else~Op(id,~n01,~args@{[}e2{]})
+\end{lyxcode}
+\end{lyxcode}
+\end{lyxcode}
+\end{lyxcode}
+Таким образом был устроен интерпретатор Lisp.
+
+Возникает вопрос: как работать с рекурсией?
+\begin{lyxcode}
+letrec~fact~=~
+
+fun~x~->~
+\begin{lyxcode}
+if~x~<=~1~then~1
+
+else~x{*}fact(x-1)
+\end{lyxcode}
+in~fact~4
+\end{lyxcode}
+Есть другой комбинатор неподвижной точки для энергичных вычислений,
+но он огромный. Нам надо, чтобы в правой части вместо fact подставилось
+определение этой функции. Надо придумать let, который подставляет
+окружение функции (нужно добавить рекурсивное замыкание).
+\begin{lyxcode}
+eval~...
+
+|~LetRec(id,~e1,~e2)~->~eval~e2~(Map.add~id~(RClosure(e1,~env,~id))~env)
+
+apply~...
+
+|~RClosure(Lam(v,~e),~env,~id)~->~eval~e~(Map.add~v~e2~(Map.add~id~e1,~env))~//~закрутка~выражений?
+\end{lyxcode}
+Как оказывается, letrec не тоже самое, что и let. 
+
+Как добавить ленивые вычисления? Сначала вычисляем $f$, а вычисление
+$x$ откладываем. Для откладывания вводится операция Susp:
+\begin{lyxcode}
+|App(e1,~e2)~->~apply(eval~e1~env)~(Susp(e2,~env))
+
+...~some~changes~with~primitive~functions
+\end{lyxcode}
+Перейдем к рассмотрению реализации при помощи абстрактных машин. Прямая
+интепретация дерева не очень эффективна (долгий обход по дереву).
+Поэтому надо эффективно обходить дерево. Классическим примером является
+язык SECD:
+\begin{itemize}
+\item S - Stack -- стек объектов для вычисления выражений
+\item E - Environment -- среда для означивания переменных, контекст
+\item C - Сontrol -- управляющая строка, оставшаяся часть вычисляемого выражения
+\item D - Dump -- стек возвратов для обработки вложенных контекстов (вызовы
+функций).
+\end{itemize}
+Все абстрактные машины являются стековыми, о количестве аргументов
+заботиться не надо на этапе свертке (очень схоже с алгоритмом прохода-свертки
+и LR-грамматики).
+
+Данные операции выполняются аналогично eval-apply подходу, но оперируем
+более простыми выражениями и идем итерационными методами.
+
+Аналогично предыдущим реализациям можно рассмотреть остальные случаи
+(рекурсия, условия и т.п.).
+
+Рассмотрим редукцию графов. Как устроены правила редукции: ищется
+самый низкий уровень лямбды, далее смотрим на переменную, а затем
+меняем ссылки в правой части.
+\begin{note}
+The implementation of Functional Programming Languages, 1987
+\end{note}
+Реализация на потоковых графах: создается взаимодействие функций в
+виде комбинируемых потоков из схемы функциональных элементов.
+
+Мы не рассмотрели комбинаторную редукцию графов и реализацию на комбинаторной
+логике.
+
+Как можно реализовать грамматику: происходит лексический анализ, а
+далее по ним строится синтаксический анализ (к примеру, методом рекурсивного
+спуска). Но так делать плохо.
+
+Поэтому есть fslex и fsyacc -- инструменты для построения всего этого
+дела, аналогично yacc и lex. В lex строятся токены, а в yacc строится
+грамматика.
+
+Такой подход не очень удобен (ибо код генерируется плохой).
+\begin{rem}
+Разве? (Зам. автора)
+
+В F\# есть комбинаторный парсер FParsec\end{rem}
+\begin{lyxcode}
+let~str~s~=~pstring~s
+
+let~float\_in\_brackets~=~str~``(``~>\textcompwordmark{}>.~pfloat~.>\textcompwordmark{}>~str~``)''~//~>\textcompwordmark{}>.~-{}-~return~right,~.>\textcompwordmark{}>~-{}-~return~left,~.>\textcompwordmark{}>.~-{}-~pair
+
+let~floats~=~sepBy~pfloat(str~``,'')
+
+...
+
+let~pexpr~,~pexpr\_ref~=~createParserForwarderToRef()
+
+let~str'~s~=~str~s~.>\textcompwordmark{}>~ws
+
+let~ident~=~indetifier~(new~IdentifierOptions())~.>\textcompwordmark{}>~ws
+
+let~pid~=~ident~|>\textcompwordmark{}>~Var
+
+let~plet~=~pipe~(str'~``let'')~ident~(str~''='')...
+
+...
+
+do~pexpr\_ref~:=~choice~{[}pid;~plet;~pint32~|>\textcompwordmark{}>~Int;~plam;~papp;~pfunc{]}
+
+\end{lyxcode}
+
+\end{document}

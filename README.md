@@ -1,2 +1,3 @@
-# lecturenotes
-Lecture Notes
+# Lecture Notes
+Lecture Notes by Akhtyamov Pavel
+

@@ -1,0 +1,3751 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage[all]{xy}
+\usepackage{pgf,tikz}
+\usepackage{mathrsfs}
+\usetikzlibrary{arrows}
+\end_preamble
+\use_default_options true
+\begin_modules
+theorems-ams-bytype
+theorems-ams-extended-bytype
+theorems-sec-bytype
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1cm
+\topmargin 2cm
+\rightmargin 1cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Алгоритмы и структуры данных
+\end_layout
+
+\begin_layout Part
+Геометрические алгоритмы
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection30.$
+\end_inset
+
+ Выпуклая оболочка в 
+\begin_inset Formula $2D$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+В данном параграфе будет рассмотрена задача нахождения выпуклой оболочки
+ некоторого множества точек на плоскости.
+\end_layout
+
+\begin_layout Definition
+Выпуклой оболочкой множества точек 
+\begin_inset Formula $X$
+\end_inset
+
+ в некотором аффинном пространстве 
+\begin_inset Formula $\mathcal{A}$
+\end_inset
+
+ называется минимальное по включению множество точек 
+\begin_inset Formula $ConvexHull(X)\mbox{\supseteq X}.$
+\end_inset
+
+ Из курса линейной алгебры известно, что данное множество существует для
+ любого ограниченного множества 
+\begin_inset Formula $X$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Можно заметить, что если множество 
+\begin_inset Formula $X$
+\end_inset
+
+ является конечным, то множество 
+\begin_inset Formula $ConvexHull(X)$
+\end_inset
+
+ является многоугольником.
+ Нашей задачей является нахождение выпуклой оболочки конечного множества
+ 
+\begin_inset Formula $X$
+\end_inset
+
+, состоящего из конечного числа точек (обозначим через 
+\begin_inset Formula $n=|X|$
+\end_inset
+
+), в частности, нахождение вершин множества 
+\begin_inset Formula $\partial(ConvexHull(X))$
+\end_inset
+
+ и их последующее упорядочивание в порядке следования в полученном многоугольник
+е.
+\end_layout
+
+\begin_layout Standard
+Напомним основные операции, применимые к векторам в пространстве 
+\begin_inset Formula $\mathbb{R}^{3}$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Definition
+Скалярным произведением векторов 
+\begin_inset Formula $\overrightarrow{u}$
+\end_inset
+
+ и 
+\begin_inset Formula $\overrightarrow{v}$
+\end_inset
+
+ в пространстве 
+\begin_inset Formula $\mathbb{R}^{3}$
+\end_inset
+
+ называется число 
+\begin_inset Formula $(\overrightarrow{u},\overrightarrow{v})=u_{x}v_{x}+u_{y}v_{y}+u_{z}v_{z}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Definition
+Векторным произведением векторов 
+\begin_inset Formula $\overrightarrow{u}$
+\end_inset
+
+ и 
+\begin_inset Formula $\overrightarrow{v}$
+\end_inset
+
+ в пространстве 
+\begin_inset Formula $\mathbb{R}^{3}$
+\end_inset
+
+ называется вектор 
+\begin_inset Formula $[\overrightarrow{u},\overrightarrow{v}]=det\left(\begin{array}{ccc}
+i & j & k\\
+u_{x} & u_{y} & u_{z}\\
+v_{x} & v_{y} & v_{z}
+\end{array}\right)$
+\end_inset
+
+, направление вектора (в геометрическом определении) определяется по направлению
+ наименьшего угла поворота от вектора 
+\begin_inset Formula $\overrightarrow{u}$
+\end_inset
+
+ к вектору 
+\begin_inset Formula $\overrightarrow{v}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Claim
+\begin_inset Formula $[\overrightarrow{u},\overrightarrow{v}]\bot\overrightarrow{u},$
+\end_inset
+
+ 
+\begin_inset Formula $[\overrightarrow{u},\overrightarrow{v}]\bot\overrightarrow{v}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Claim
+\begin_inset Formula $[\overrightarrow{u},\overrightarrow{v}]=|\overrightarrow{u}|\cdot|\overrightarrow{v}|\cdot|sin\alpha|$
+\end_inset
+
+
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Standard
+Рассмотрим некоторые алгоритмы, решающие задачу нахождения выпуклой оболочки
+ точек в двумерном пространстве.
+\end_layout
+
+\begin_layout Algorithm
+Алгоритм Джарвиса (алгоритм 
+\begin_inset Quotes eld
+\end_inset
+
+заворачивания подарка
+\begin_inset Quotes erd
+\end_inset
+
+) - 
+\series bold
+Jarvis, 1973.
+\end_layout
+
+\begin_layout Algorithm
+Ход алгоритма:
+\end_layout
+
+\begin_layout Enumerate
+Выберем самую нижнюю точку из исходного множества точек 
+\begin_inset Formula $P$
+\end_inset
+
+, а среди самых нижних точек --- самую левую (т.е.
+ наименьшую по координате 
+\begin_inset Formula $Ox$
+\end_inset
+
+).
+ Обозначим полученную точку через 
+\begin_inset Formula $c_{0}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Выбираем точку с наименьшим углом поворота относительно предыдущего отрезка.
+ Для сравнения точек по полярному углу воспользуемся знаком векторного произведе
+ния.
+ При равенстве углов поворота возьмем вектор, имеющий большую длину.
+ Обозначим полученную точку (на 
+\begin_inset Formula $k$
+\end_inset
+
+-ой итерации шага (2)) через 
+\begin_inset Formula $c_{k}$
+\end_inset
+
+.
+ Повторяем шаг (2) до тех пор, пока не будет выполнено равенство 
+\begin_inset Formula $c_{l}=c_{0}$
+\end_inset
+
+ для некоторого 
+\begin_inset Formula $l\in\mathbb{N}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Время работы данного алгоритма --- 
+\begin_inset Formula $O(nh)$
+\end_inset
+
+, где 
+\begin_inset Formula $n$
+\end_inset
+
+--- количество точек в исходном множестве 
+\begin_inset Formula $X$
+\end_inset
+
+, а 
+\begin_inset Formula $h$
+\end_inset
+
+ --- количество вершин в многоугольнике 
+\begin_inset Formula $\partial ConvexHull(X)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Как видно, сложность алгоритма Джарвиса может достигать оценки 
+\begin_inset Formula $O(n^{2})$
+\end_inset
+
+, поэтому приведем другой алгоритм построения выпуклой оболочки множества
+ точек 
+\begin_inset Formula $X$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection31.$
+\end_inset
+
+ Выпуклая оболочка в 
+\begin_inset Formula $3D$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+В данном параграфе будут рассмотрены алгоритмы построения выпуклой оболочки
+ множества точек в 
+\begin_inset Formula $\mathbb{R}^{3}$
+\end_inset
+
+.
+ Чтобы найти выпуклую оболочку конечного количества точек, необходимо и
+ достаточно построить выпуклый многогранник, содержащий данное множество
+ точек.
+\end_layout
+
+\begin_layout Remark
+Будем считать, что никакие четыре точки не лежат в одной плоскости (иначе
+ данную грань можно триангули-ровать любой треугольник).
+\end_layout
+
+\begin_layout Algorithm
+Построение выпуклой оболочки методом полного перебора.
+\end_layout
+
+\begin_layout Algorithm
+Перебираем все точки множества 
+\begin_inset Formula $p_{1},\ p_{2},\ p_{3}$
+\end_inset
+
+.
+ Проверяем, является ли грань внешней: 
+\begin_inset Formula $\overrightarrow{n}=\overrightarrow{p_{1}p_{2}}\times\overrightarrow{p_{1}p_{3}}$
+\end_inset
+
+ (проверим, что грань торчит наружу).
+ Такой алгоритм имеет сложность 
+\begin_inset Formula $O(n^{4})$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Remark
+Заметим, что данный алгоритм обобщается на случай 
+\begin_inset Formula $\mathbb{R}^{k}$
+\end_inset
+
+ и будет работать за 
+\begin_inset Formula $O(n^{k+1}k^{3})$
+\end_inset
+
+.
+ Чтобы проверить ориентацию, надо будет проверить знак определителя 
+\begin_inset Formula $det\left(\begin{array}{c}
+\overrightarrow{pp_{1}}\\
+\overrightarrow{pp_{2}}\\
+\overrightarrow{pp_{3}}\\
+\dots\\
+pp_{k-1}
+\end{array}\right)$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Принадлежность точки плоскости можно проверить следующим образом: 
+\begin_inset Formula $det\left(\begin{array}{ccc}
+x-x_{1} & y-y_{1} & z-z_{1}\\
+x_{2}-x_{1} & y_{2}-y_{1} & z_{2}-z_{1}\\
+x_{3}-x_{1} & y_{3}-y_{1} & z_{3}-z1
+\end{array}\right)=0$
+\end_inset
+
+.
+ Тогда уравнение плоскости имеет вид 
+\begin_inset Formula $Ax+By+Cz+D=0$
+\end_inset
+
+, где 
+\begin_inset Formula $\overrightarrow{n}=\left(\begin{array}{c}
+A\\
+B\\
+C
+\end{array}\right)$
+\end_inset
+
+ --- вектор нормали.
+ Таким образом, надо проверить знак скалярного произведения.
+ Сложность алгоритма умножается на 
+\begin_inset Formula $k^{3}$
+\end_inset
+
+ из-за вычисления определителя матрицы.
+\end_layout
+
+\begin_layout Algorithm
+Алгоритм построения методом заворачивания подарка.
+ 
+\end_layout
+
+\begin_layout Algorithm
+Ход алгоритма:
+\end_layout
+
+\begin_layout Enumerate
+Находим точку 
+\begin_inset Formula $p_{0}$
+\end_inset
+
+ с минимальной координатой по оси 
+\begin_inset Formula $z$
+\end_inset
+
+.
+ Данный шаг выполняется за 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Находим точку 
+\begin_inset Formula $p_{1}$
+\end_inset
+
+, для которой выполняется следующее условие: 
+\begin_inset Formula $\angle(\overrightarrow{p_{0}p_{1}},\mbox{\overrightarrow{Oz}})$
+\end_inset
+
+ максимален.
+ Данный шаг выполняется за 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Нахождение первой грани: рассмотрим множество треугольников 
+\begin_inset Formula $\Delta pp_{0}p_{1}$
+\end_inset
+
+, среди них необходимо выбрать такую точку 
+\begin_inset Formula $p$
+\end_inset
+
+, что все остальные точки лежат в одной стороне относительно плоскости 
+\begin_inset Formula $p_{0}p_{1}p$
+\end_inset
+
+.
+ Выполняется аналогично алгоритму Джарвиса в двумерном случае (или вычисляется
+ максимальный угол раскрытия или наибольший угол между осью 
+\begin_inset Formula $Oz$
+\end_inset
+
+ и 
+\begin_inset Formula $\overrightarrow{n}=\overrightarrow{p_{0}p_{1}}\times\mbox{\overrightarrow{p_{0}p_{2}}}$
+\end_inset
+
+).
+ Данный шаг выполняется за 
+\begin_inset Formula $O(n^{2})$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Поиск грани от некоторого 
+\begin_inset Quotes eld
+\end_inset
+
+незакрытого
+\begin_inset Quotes erd
+\end_inset
+
+ ребра 
+\begin_inset Formula $\overrightarrow{p_{k}p_{k+1}}$
+\end_inset
+
+: ищем ту точку, для которой угол между нормалями граней минимальна.
+ Но существует проблема: мы могли закрыть некоторые смежные грани: закрываем
+ от 1 до 3 граней.
+ Главное --- записать информацию об открытости/закрытости ребер.
+ В конце данной итерации надо открыть новые ребра.
+ Далее будет доказано, что количество открытых ребер и количество граней
+ равняется 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+В итоге, из того, что количество итераций шага (4) равно 
+\begin_inset Formula $O(n)$
+\end_inset
+
+, и алгоритм 31.2 работает за 
+\begin_inset Formula $O(n^{2})$
+\end_inset
+
+.
+ Осталось доказать следующее утверждение:
+\end_layout
+
+\begin_layout Claim
+Граф выпуклой оболочки является планарным.
+ При этом количество ребер в выпуклой оболочке равняется 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Proof
+Доказывается непосредственным применением формулы Эйлера для планарного
+ графа.
+\end_layout
+
+\begin_layout Algorithm
+Алгоритм построения выпуклой оболочки методом 
+\begin_inset Quotes eld
+\end_inset
+
+divide and conquer
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Algorithm
+Разобьем вертикальными плоскостями множества точек на группы из 5-7 точек
+ (в лексикографическом порядке).
+ Строим выпуклую оболочку точек каждой группы тривиальным алгоритмом.
+ Заметим, что полученные выпуклые многогранники не пересекаются.
+\end_layout
+
+\begin_layout Algorithm
+Покажем, как можно объединить две выпуклые оболочки за объём времени, равный
+ O(n).
+ Обозначим через 
+\begin_inset Formula $P,Q$
+\end_inset
+
+ --- исходные многранники.
+ На идейном уровне: если сделать проекцию многогранников на ось 
+\begin_inset Formula $Oxy$
+\end_inset
+
+, то получим два непересекающихся многоугольника.
+ Построим для проекций объединение выпуклых оболочек за O(n) времени.
+ Запомним 
+\begin_inset Quotes eld
+\end_inset
+
+крайнее ребро
+\begin_inset Quotes erd
+\end_inset
+
+ при объединении (обозначим данное ребро через 
+\begin_inset Formula $p_{1}q_{1}$
+\end_inset
+
+).
+ Воспользуемся аналогом алгоритма 
+\begin_inset Quotes eld
+\end_inset
+
+заворачивания подарка
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Заметим, что ребро 
+\begin_inset Formula $p_{1}q_{1}\in\partial(ConvexHull(P\cup Q))$
+\end_inset
+
+.
+ Относительно данного ребра будем заворачивать выпуклую оболочку точек.
+ Рассмотрим такую точку 
+\begin_inset Formula $x$
+\end_inset
+
+, что все точки лежат по одну сторону от плоскости 
+\begin_inset Formula $p_{1}q_{1}x$
+\end_inset
+
+ (можно считать наименьший угол между нормалью к плоскости 
+\begin_inset Formula $p_{1}q_{1}x$
+\end_inset
+
+ и осью Oy).
+ Единственной проблемой является выбор следующей грани.
+ Далее необходимо выбирать множество точек таким образом, чтобы 
+\begin_inset Quotes eld
+\end_inset
+
+параллельно
+\begin_inset Quotes erd
+\end_inset
+
+ идти по множествам точек 
+\begin_inset Formula $\partial P$
+\end_inset
+
+ и 
+\begin_inset Formula $\partial Q$
+\end_inset
+
+.
+ Покажем, как решить данную проблему.
+ Действительно, можно минимизировать угол между нормалями.
+ В конце алгоритма осталось выкинуть точки 
+\begin_inset Formula $Inn(ConvexHull(P\cup Q))$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Algorithm
+В качестве структуры для хранения граней можно использовать граф.
+ В данном графе можно выкидывать лишние ребра.
+ При этом можно еще выкидывать соответствующие точки из проекций.
+ При помощи DFS можно пометить обход, по которым обходит объединение.
+\end_layout
+
+\begin_layout Algorithm
+В итоге, все итерации объединения будут работать за O(n).
+ Действительно, по каждое ребро мы рассматриваем не более 2 раза (а количество
+ ребер, как было доказано в 
+\series bold
+утверждении 1
+\series default
+, равняется 
+\begin_inset Formula $O(n)$
+\end_inset
+
+).
+ Таким образом, суммарное время работы алгоритма составляет O(n(logn)).
+\end_layout
+
+\begin_layout Exercise
+Придумать улучшение данного алгоритма для многомерного случая.
+\end_layout
+
+\begin_layout Exercise
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection32$
+\end_inset
+
+.
+ Алгоритмы вычислительной геометрии
+\end_layout
+
+\begin_layout Algorithm
+Алгоритм поиска ближайших точек в 
+\begin_inset Formula $2D$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Algorithm
+На плоскости надо найти пару точек с наименьшим расстоянием.
+ Будем использовать метод 
+\begin_inset Quotes eld
+\end_inset
+
+разделяй и влавствуй
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Для этого разделим множество точек на две части вертикальной прямой (обозначим
+ их через 
+\begin_inset Formula $A_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $A_{2}$
+\end_inset
+
+).
+ В каждой из них найдем минимальную пару точек на расстояниях 
+\begin_inset Formula $h_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $h_{2}$
+\end_inset
+
+ соответственно.
+ Обозначим через 
+\begin_inset Formula $h=min(h_{1},h_{2}).$
+\end_inset
+
+ Тогда новое минимальное расстояние может быть в полосе 
+\begin_inset Formula $B=\{p_{i}:\ |p_{i}.x-x|\le h\}$
+\end_inset
+
+.
+ Тогда будем искать пару в 
+\begin_inset Formula $B$
+\end_inset
+
+ за 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+ Рассмотрим множество 
+\begin_inset Formula $C_{i}=\{p_{j}:\ p_{j}\in B,\ p_{i}.y-h\le p_{j}.y<p_{i}.y\}$
+\end_inset
+
+.
+ Тогда утверждается, что 
+\begin_inset Formula $|C_{i}|\le7$
+\end_inset
+
+.
+ Если отсортировать все точки по координате 
+\begin_inset Formula $y$
+\end_inset
+
+, то тогда можно выбирать все точки 
+\begin_inset Formula $p_{i}\in B$
+\end_inset
+
+ (можно данную вещь прокрутить через очередь точек, находящихся в множестве
+ 
+\begin_inset Formula $B$
+\end_inset
+
+, и лежащих на расстоянии не более 
+\begin_inset Formula $h$
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Algorithm
+В итоге, алгоритм будет работать за время, равное 
+\begin_inset Formula $O(n\log n)$
+\end_inset
+
+ .
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Algorithm
+Алгоритм поиска треугольника с наименьшим периметром выполняется аналогичным
+ образом.
+\end_layout
+
+\begin_layout Algorithm
+Отсортируем все точки по 
+\begin_inset Formula $x$
+\end_inset
+
+-координате.
+\end_layout
+
+\begin_layout Enumerate
+Разделяем множества точек на множества 
+\begin_inset Formula $A_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $A_{2}$
+\end_inset
+
+, в каждом их которых рекурсивно вызывается алгоритм.
+ Аналогичным образом отсортируем все точки по координате 
+\begin_inset Formula $y$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Обозначим периметры минимальных треугольников через 
+\begin_inset Formula $l_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $l_{2}$
+\end_inset
+
+ соответственно, 
+\begin_inset Formula $l=min(l_{1},\ l_{2})$
+\end_inset
+
+.
+ Далее обозначим полосу 
+\begin_inset Formula $B$
+\end_inset
+
+ шириной 
+\begin_inset Formula $l$
+\end_inset
+
+ (этого хватит, ибо наибольшая сторона треугольника тогда не более 
+\begin_inset Formula $l/2$
+\end_inset
+
+).
+ Далее будем пойти по блоку высоты 
+\begin_inset Formula $l/2$
+\end_inset
+
+.
+ Утверждается, что в таком блоке ограниченное количество точек (на самом
+ деле, не более 16)
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+definecolor{uuuuuu}{rgb}{0.26666666666666666,0.26666666666666666,0.2666666666666666
+6} 
+\backslash
+definecolor{sqsqsq}{rgb}{0.12549019607843137,0.12549019607843137,0.1254901960784313
+7} 
+\backslash
+definecolor{xdxdff}{rgb}{0.49019607843137253,0.49019607843137253,1.} 
+\backslash
+definecolor{qqqqff}{rgb}{0.,0.,1.} 
+\backslash
+begin{tikzpicture}[line cap=round,line join=round,>=triangle 45,x=1.0cm,y=1.0cm]
+ 
+\backslash
+clip(-6.097555047582588,-4.037915463112448) rectangle (8.905465549009254,5.261389029
+354241); 
+\backslash
+draw (0.,-4.037915463112448) -- (0.,5.261389029354241); 
+\backslash
+draw (-2.6731851539239653,3.17466362540602) node[anchor=north west] {$A_1$};
+ 
+\backslash
+draw (2.816507831847515,3.0997555339822376) node[anchor=north west] {$A_2$};
+ 
+\backslash
+draw [dash pattern=on 3pt off 3pt] (-1.7910664964851497,-4.037915463112448)
+ -- (-1.7910664964851497,5.261389029354241); 
+\backslash
+draw [dash pattern=on 3pt off 3pt] (1.798684897719487,-4.037915463112448)
+ -- (1.798684897719487,5.261389029354241); 
+\backslash
+draw (0.33383965894501305,2.9178358833816236) node[anchor=north west] {$B$};
+ 
+\backslash
+draw (-1.1001152340245355,-1.0308906502434725) node[anchor=north west] {$l/2$};
+ 
+\backslash
+draw (1.798684897719487,0.33368954351771585)-- (-0.006339386522219928,0.354812730693
+23815); 
+\backslash
+draw (-1.7910664964851497,-1.0695111219503957)-- (0.,-1.069663794122845); 
+\backslash
+draw (-1.7910664964851497,1.1703257358478991)-- (1.798684897719487,1.170325735847899
+1); 
+\backslash
+draw (0.7297824278992914,0.9381220386102339) node[anchor=north west] {$l/2$};
+ 
+\backslash
+begin{scriptsize} 
+\backslash
+draw [fill=qqqqff] (0.,-3.5) circle (1.5pt); 
+\backslash
+draw[color=qqqqff] (0.0770119169206163,-3.353041484380724) node {$B$}; 
+\backslash
+draw [fill=qqqqff] (-1.7910664964851497,-1.9421446639167192) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (-1.7207822772501609,-1.7906727203989787) node {$C$}; 
+\backslash
+draw [fill=qqqqff] (1.798684897719487,-1.8351331047398873) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (1.8748061110913934,-1.6836611612221468) node {$D$}; 
+\backslash
+draw [fill=xdxdff] (-1.7910664964851497,1.1703257358478991) circle (1.5pt);
+ 
+\backslash
+draw[color=xdxdff] (-1.7207822772501609,1.3233636516468288) node {$E$}; 
+\backslash
+draw [fill=sqsqsq] (-0.006339386522219928,0.35481273069323815) circle (1.5pt);
+ 
+\backslash
+draw[color=sqsqsq] (0.06631076100293311,0.4993746459852232) node {$G$}; 
+\backslash
+draw [fill=xdxdff] (1.798684897719487,0.33368954351771585) circle (1.5pt);
+ 
+\backslash
+draw[color=xdxdff] (1.8748061110913934,0.48867349006754) node {$H$}; 
+\backslash
+draw [fill=xdxdff] (-1.7910664964851497,-1.0695111219503957) circle (1.5pt);
+ 
+\backslash
+draw[color=xdxdff] (-1.7207822772501609,-0.9238790910666407) node {$I$}; 
+\backslash
+draw [fill=xdxdff] (0.,-1.069663794122845) circle (1.5pt); 
+\backslash
+draw[color=xdxdff] (0.0770119169206163,-0.9238790910666407) node {$J$}; 
+\backslash
+draw [fill=uuuuuu] (1.798684897719487,1.1703257358478991) circle (1.5pt); 
+\backslash
+draw[color=uuuuuu] (1.8748061110913934,1.3233636516468288) node {$F$}; 
+\backslash
+draw[color=black] (0.034207293249883516,1.0879382214577986) node {$d$}; 
+\backslash
+draw [fill=uuuuuu] (0.0038092006171686066,1.1703257358478991) circle (1.5pt);
+ 
+\backslash
+draw[color=uuuuuu] (0.0770119169206163,1.3233636516468288) node {$K$}; 
+\backslash
+end{scriptsize} 
+\backslash
+end{tikzpicture}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Algorithm
+Поиск диаметра точек на плоскости.
+\end_layout
+
+\begin_layout Definition
+Опорной прямой к фигуре 
+\begin_inset Formula $\Phi$
+\end_inset
+
+ называется прямая 
+\begin_inset Formula $l$
+\end_inset
+
+, параллельная, касательная к фигуре 
+\begin_inset Formula $\Phi$
+\end_inset
+
+, такая что 
+\begin_inset Formula $\Phi$
+\end_inset
+
+ лежит в одной полуплоскости относительно 
+\begin_inset Formula $\Phi$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Claim
+Пусть 
+\begin_inset Formula $L_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $L_{2}$
+\end_inset
+
+ --- параллельные опорные прямые в точках 
+\begin_inset Formula $A_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $A_{2}$
+\end_inset
+
+, при этом расстояние между 
+\begin_inset Formula $L_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $L_{2}$
+\end_inset
+
+ максимально.
+ Тогда 
+\begin_inset Formula $A_{1}A_{2}\bot L_{1}$
+\end_inset
+
+, 
+\begin_inset Formula $A_{1}A_{2}\bot L_{2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Proof
+Предположим противное.
+ Тогда рассмотрим прямые 
+\begin_inset Formula $L_{1}',L_{2}'\bot A_{1}A_{2}$
+\end_inset
+
+.
+ Тогда доведем их до опорных и получим противоречие.
+\end_layout
+
+\begin_layout Claim
+Диаметр фигуры --- максимальное расстояние между парами опорными прямыми.
+\end_layout
+
+\begin_layout Proof
+Обозначим диаметр через 
+\begin_inset Formula $AB$
+\end_inset
+
+, построим для этого прямые 
+\begin_inset Formula $L_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $L_{2}$
+\end_inset
+
+, перпендикулярные 
+\begin_inset Formula $AB$
+\end_inset
+
+ и доведем их до опорных прямых.
+ Тогда расстояние не уменьшится
+\end_layout
+
+\begin_layout Standard
+Теперь можно заняться построением алгоритма (методом вращающих калиперов)
+\end_layout
+
+\begin_layout Standard
+Перебираем пары перпендикулярных опорных прямых: обозначим прямые через
+ 
+\begin_inset Formula $L_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $L_{2}$
+\end_inset
+
+ на угол, равный 
+\begin_inset Formula $min(\alpha,\beta)$
+\end_inset
+
+, и ищем ма 
+\begin_inset Formula $max(A_{i},B_{i})$
+\end_inset
+
+ по таким точкам.
+ В итоге, будет 
+\begin_inset Formula $O(n)$
+\end_inset
+
+ вращений в время работы --- 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Algorithm
+Поиск накрывающего прямоугольника минимального периметра.
+\end_layout
+
+\begin_layout Algorithm
+Рассмотрим на данном чертеже сумму 
+\begin_inset Formula $P_{1}=AE_{1}+E_{1}B=AB\cdot(\sin(\alpha_{1})+\cos(\alpha_{1}))=AB\cdot(\sin\alpha_{1}+\sin(\alpha_{1}+\frac{\pi}{2}))=AB\cdot\sqrt{2}\cdot\sin(\alpha_{1}+\frac{\pi}{4})$
+\end_inset
+
+ --- выпуклая функция на отрезке 
+\begin_inset Formula $[0,\frac{\pi}{2}]$
+\end_inset
+
+.
+ Заметим, что сумма 
+\begin_inset Formula $P_{1}+P_{2}+P_{3}+P_{4}$
+\end_inset
+
+ --- выпуклая функция, где 
+\begin_inset Formula $\alpha_{i}=\alpha+c_{i}$
+\end_inset
+
+, 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ --- угол поворота прямоугольника.
+ Тогда 
+\begin_inset Formula $\min(P_{1}+P_{2}+P_{3}+P_{4})$
+\end_inset
+
+ достигается на границе диапазона 
+\begin_inset Formula $\alpha$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Algorithm
+Научимся выполнять алгоритм при помощи данной идеи.
+ Будем поворачивать наш прямоугольник на минимально возможный угол (при
+ этом сохраняется инвариант: одна из сторон многоугольника лежит на границе
+ прямоугольника).
+ При пересчете можно учитывать только один угол.
+\end_layout
+
+\begin_layout Algorithm
+В начале алгоритма возьмем крайние точки (самая нижняя, самая левая, самая
+ верхняя, самая правая).
+ Алгоритм заканчивает свою работу, когда уже будет встречена исходная точка
+ или произойдет суммарный оборот на 
+\begin_inset Formula $90^{\circ}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Algorithm
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+definecolor{uuuuuu}{rgb}{0.26666666666666666,0.26666666666666666,0.2666666666666666
+6} 
+\backslash
+definecolor{qqqqff}{rgb}{0.,0.,1.} 
+\backslash
+begin{tikzpicture}[line cap=round,line join=round,>=triangle 45,x=0.7745539087955
+416cm,y=0.7445597938763541cm] 
+\backslash
+clip(-8.849784620469732,-5.911934373717655) rectangle (16.971529781132986,7.51882039
+2044862); 
+\backslash
+draw (-1.6072424645386667,2.3028980562352124)-- (0.09487777691238504,2.6836354786650
+523); 
+\backslash
+draw (0.09487777691238504,2.6836354786650523)-- (1.8417906562963593,2.32529437520167
+33); 
+\backslash
+draw (1.8417906562963593,2.3252943752016733)-- (2.1553391218268163,0.444003582018934
+86); 
+\backslash
+draw (2.1553391218268163,0.44400358201893486)-- (2.1105464838938937,-0.8773792370022
+744); 
+\backslash
+draw (2.1105464838938937,-0.8773792370022744)-- (-0.6889933869137572,-1.146135064599
+8085); 
+\backslash
+draw (-0.6889933869137572,-1.1461350645998085)-- (-1.4728645507398996,0.130455116488
+47843); 
+\backslash
+draw (-1.6072424645386667,2.3028980562352124)-- (-1.4728645507398996,0.1304551164884
+7843); 
+\backslash
+draw (-0.5435205682953986,3.862840450111788)-- (-2.8533656362112816,0.14567255935974
+732); 
+\backslash
+draw [domain=-8.849784620469732:16.971529781132986] plot(
+\backslash
+x,{(--12.897760651625692-2.309845067915883*
+\backslash
+x)/3.717167890752041}); 
+\backslash
+draw [domain=-8.849784620469732:16.971529781132986] plot(
+\backslash
+x,{(--10.94292016626764--3.717167890752041*
+\backslash
+x)/2.309845067915883}); 
+\backslash
+draw [domain=-8.849784620469732:16.971529781132986] plot(
+\backslash
+x,{(-9.871865725151505--3.717167890752041*
+\backslash
+x)/2.309845067915883}); 
+\backslash
+draw [domain=-8.849784620469732:16.971529781132986] plot(
+\backslash
+x,{(--5.851844437184826--2.309845067915883*
+\backslash
+x)/-3.717167890752041}); 
+\backslash
+begin{scriptsize} 
+\backslash
+draw [fill=qqqqff] (-1.6072424645386667,2.3028980562352124) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (-1.5072307621940766,2.516705576094585) node {$A$}; 
+\backslash
+draw [fill=qqqqff] (0.09487777691238504,2.6836354786650523) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (0.03776494548475908,3.0062091666462933) node {$B_1$};
+ 
+\backslash
+draw [fill=qqqqff] (1.8417906562963593,2.3252943752016733) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (1.9498883460773777,2.5320025632993257) node {$B$}; 
+\backslash
+draw [fill=qqqqff] (2.1553391218268163,0.44400358201893486) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (2.286422064581678,0.7116610859351574) node {$D_1$}; 
+\backslash
+draw [fill=qqqqff] (2.1105464838938937,-0.8773792370022744) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (2.225234115762715,-0.6650677624915243) node {$C$}; 
+\backslash
+draw [fill=qqqqff] (-0.6889933869137572,-1.1461350645998085) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (-0.5894115299096199,-0.9251165449721197) node {$D$}; 
+\backslash
+draw [fill=qqqqff] (-1.4728645507398996,0.13045511648847843) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (-1.369557877351408,0.34453339302137564) node {$G$}; 
+\backslash
+draw [fill=qqqqff] (-0.5435205682953986,3.862840450111788) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (-0.40584768345272837,4.12288923259238) node {$E_1$}; 
+\backslash
+draw [fill=qqqqff] (-2.8533656362112816,0.14567255935974732) circle (1.5pt);
+ 
+\backslash
+draw[color=qqqqff] (-2.7156927513686115,0.40572134184033926) node {$E_4$};
+ 
+\backslash
+draw[color=black] (-6.096326923616361,7.411741481611675) node {$i$}; 
+\backslash
+draw[color=black] (1.7969184740299682,7.411741481611675) node {$j$}; 
+\backslash
+draw[color=black] (7.028488098051373,7.411741481611675) node {$k$}; 
+\backslash
+draw[color=black] (-8.727408722831804,3.7251675652691163) node {$l$}; 
+\backslash
+draw [fill=uuuuuu] (1.2101950339693757,-2.3262891862185477) circle (1.5pt);
+ 
+\backslash
+draw[color=uuuuuu] (1.3686028322972215,-2.1182815469419105) node {$E3$}; 
+\backslash
+draw [fill=uuuuuu] (3.4714237133080434,1.3126417348363857) circle (1.5pt);
+ 
+\backslash
+draw[color=uuuuuu] (3.6019629641893998,1.5682923694006483) node {$E_2$}; 
+\backslash
+end{scriptsize} 
+\backslash
+end{tikzpicture}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Algorithm
+Поиск накрывающего прямоугольника минимальной площади
+\end_layout
+
+\begin_layout Algorithm
+Будем использовать схожую идею, что и в предыдущем алгоритме.
+ Вычислим площадь 
+\begin_inset Quotes eld
+\end_inset
+
+опорного
+\begin_inset Quotes erd
+\end_inset
+
+ прямоугольника:
+\end_layout
+
+\begin_layout Algorithm
+\begin_inset Formula $S=AC\cdot\cos\gamma_{1}\cdot BD\cdot\cos\gamma_{2}=\frac{1}{2}AC\cdot BD\cdot(\cos(\gamma_{1}-\gamma_{2})+\cos(\gamma_{1}+\gamma_{2}))=\frac{1}{2}AC\cdot BD\cdot(cos\varphi+cos\psi)$
+\end_inset
+
+, где 
+\begin_inset Formula $\varphi=const$
+\end_inset
+
+, 
+\begin_inset Formula $pi\le\psi=c_{1}+c_{2}+2\alpha\le\pi$
+\end_inset
+
+.
+ Таким образом, 
+\begin_inset Formula $S$
+\end_inset
+
+ --- выпуклая функция, и можно построить аналогичный алгоритм.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Algorithm
+Обход граней плоского графа.
+\end_layout
+
+\begin_layout Algorithm
+Даны координаты вершин и список ребер.
+ Найдем все грани плоского графа.
+\end_layout
+
+\begin_layout Algorithm
+Для начала докажем следующую теорему:
+\end_layout
+
+\begin_layout Theorem
+(Эйлер) Для планарного графа 
+\begin_inset Formula $G$
+\end_inset
+
+ выполнено соотношение: 
+\begin_inset Formula $v+f-e=2$
+\end_inset
+
+, где 
+\begin_inset Formula $v$
+\end_inset
+
+ --- количество вершин графа 
+\begin_inset Formula $G$
+\end_inset
+
+, 
+\begin_inset Formula $f$
+\end_inset
+
+ --- количество ребер графа 
+\begin_inset Formula $G$
+\end_inset
+
+, 
+\begin_inset Formula $e$
+\end_inset
+
+ --- количество ребер графа 
+\begin_inset Formula $G$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Proof
+Доказывается тривиальной индукцией с применением леммы Жордана.
+\end_layout
+
+\begin_layout Standard
+Ход алгоритма:
+\end_layout
+
+\begin_layout Enumerate
+Сортируем все ребра в каждой вершине по полярному углу (по теореме Эйлера
+ данный шаг выполняется за 
+\begin_inset Formula $O(v\log v)$
+\end_inset
+
+ операций).
+\end_layout
+
+\begin_layout Enumerate
+Выполняем поиск очередной грани: если мы прошли по ребру 
+\begin_inset Formula $\overrightarrow{ab}$
+\end_inset
+
+, то ищем следующее ребро из данной вершины 
+\begin_inset Formula $b$
+\end_inset
+
+ после ребра 
+\begin_inset Formula $ba$
+\end_inset
+
+.
+ При этом будем обратное ребро 
+\begin_inset Formula $ba$
+\end_inset
+
+ класть в очередь.
+ Таким образом, если начать строить очередную грань по ребру из очереди,
+ то обход граней будет идти в порядке возрастания удаленной от первой грани.
+ 
+\end_layout
+
+\begin_layout Standard
+Заметим, что данный алгоритм позволяет на сфере найти наикратчайший путь
+ по ребрам грани.
+ Но на плоскости существует внешняя грань, которая не позволяет уже утверждать
+ данное.
+\end_layout
+
+\begin_layout Algorithm
+Поиск внешней грани плоского графа.
+\end_layout
+
+\begin_layout Algorithm
+Чтобы найти внешнюю грань, необходимо выполнить данные действия:
+\end_layout
+
+\begin_layout Enumerate
+Найти крайнюю точку множества (в нашем случае, нижнюю левую точку).
+\end_layout
+
+\begin_layout Enumerate
+Берем ребро с минимальным полярным углом и повторяем данный шаг до тех пор,
+ не прошли ли мы в исходную точку.
+\end_layout
+
+\begin_layout Algorithm
+Проверка, является ли грань внешней?
+\end_layout
+
+\begin_layout Algorithm
+Можно предоставить два способа, судя по исходным идеям:
+\end_layout
+
+\begin_layout Enumerate
+Вычислить сумму углов у грани с 
+\begin_inset Formula $n$
+\end_inset
+
+ вершинами: если сумма равна 
+\begin_inset Formula $\pi(n-2)$
+\end_inset
+
+, то грань является внутренней, если сумма равна 
+\begin_inset Formula $\pi(n+2)$
+\end_inset
+
+, то грань является внешней.
+\end_layout
+
+\begin_layout Enumerate
+Вычислить ориентированную площадь данного многоугольника по следующей формуле:
+ 
+\begin_inset Formula $\sum(p_{i+1}.x-p_{i}.x)*\left(\frac{p_{i+1.}y+p_{i}.y}{2}\right)$
+\end_inset
+
+, и по знаку данной суммы можно ответить на поставленный вопрос.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection33$
+\end_inset
+
+.
+ Сумма Минковского 
+\end_layout
+
+\begin_layout Definition
+Суммой Минковского двух фигур 
+\begin_inset Formula $E$
+\end_inset
+
+ и 
+\begin_inset Formula $F$
+\end_inset
+
+ называется множество 
+\begin_inset Formula $G=E\oplus F=\{p+r\,|\, p\in E,r\in F\}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Example
+Сумма двух точек на плосости есть точка.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example
+Сумма точки и фигуры 
+\begin_inset Formula $F$
+\end_inset
+
+ есть фигура 
+\begin_inset Formula $F$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example
+Сумма двух отрезков есть параллелограмм.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example
+Сумма круга и квадрата с центром в одной точке есть закругленный прямоугольник.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Theorem
+Обозначим через 
+\begin_inset Formula $E$
+\end_inset
+
+, 
+\begin_inset Formula $F$
+\end_inset
+
+ --- выпуклые мноугольники с 
+\begin_inset Formula $m$
+\end_inset
+
+ и 
+\begin_inset Formula $n$
+\end_inset
+
+вершинами соответственно.
+ Тогда 
+\begin_inset Formula $G=E\oplus F$
+\end_inset
+
+ является выпуклым многоугольником с не более, чем 
+\begin_inset Formula $m+n$
+\end_inset
+
+ вершинами.
+\end_layout
+
+\begin_layout Proof
+Рассмотрим некоторое направление 
+\begin_inset Formula $\overrightarrow{e}$
+\end_inset
+
+ и посмотрим крайнюю точку множества 
+\begin_inset Formula $G$
+\end_inset
+
+ --- она будет складываться из крайней точки 
+\begin_inset Formula $E$
+\end_inset
+
+ и крайней точки 
+\begin_inset Formula $F$
+\end_inset
+
+.
+ Поэтому можно посмотреть на нормаль к ребру множества 
+\begin_inset Formula $E$
+\end_inset
+
+ и показать, что для любой точки 
+\begin_inset Formula $K\in F$
+\end_inset
+
+ будет являться крайним ребром (в обратную сторону все работает аналогично).
+ Осталось обработать случай параллельных ребер: тогда их сумма будет крайним
+ ребром.
+\end_layout
+
+\begin_layout Standard
+Из доказательства данной теоремы можно придумать следующий:
+\end_layout
+
+\begin_layout Algorithm
+Алгоритм построения суммы Минковского двух выпуклых многоугольников.
+\end_layout
+
+\begin_layout Algorithm
+Ход алгоритма:
+\end_layout
+
+\begin_layout Enumerate
+Берем крайние левые точки в множествах 
+\begin_inset Formula $E$
+\end_inset
+
+ и 
+\begin_inset Formula $F$
+\end_inset
+
+.
+ Обозначим их через 
+\begin_inset Formula $A_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $B_{1}$
+\end_inset
+
+ соответственно.
+ Строим точку 
+\begin_inset Formula $C_{1}=A_{1}+$
+\end_inset
+
+
+\begin_inset Formula $B_{1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Среди следующих отрезков 
+\begin_inset Formula $A_{1}A_{2}$
+\end_inset
+
+ и 
+\begin_inset Formula $B_{1}B_{2}$
+\end_inset
+
+ выбираем отрезок с наименьшим углом (предположим, что выбран отрезок 
+\begin_inset Formula $A_{1}A_{2}$
+\end_inset
+
+).
+ Тогда надо добавить данный отрезок к 
+\begin_inset Formula $C$
+\end_inset
+
+, и переместить точку 
+\begin_inset Formula $A_{1}\rightarrow A_{2}$
+\end_inset
+
+ (если прямые параллельны, то надо продвинуть сумму точек).
+\end_layout
+
+\begin_layout Standard
+Данный алгоритм работает за 
+\begin_inset Formula $O(N)$
+\end_inset
+
+, где 
+\begin_inset Formula $N$
+\end_inset
+
+ --- количество вершин в 
+\begin_inset Formula $E$
+\end_inset
+
+ и 
+\begin_inset Formula $F$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Algorithm
+Определить, пересекаются ли два выпуклых многоугольника?
+\end_layout
+
+\begin_layout Algorithm
+Алгоритм очень прост: отразим один относительно начала координат, и если
+ сумма Минковского содержит точку 
+\begin_inset Formula $0$
+\end_inset
+
+.
+ (Проверку можно осуществлять, к примеру, таким образом: векторы 
+\begin_inset Formula $\overrightarrow{p_{i}p_{i+1}}$
+\end_inset
+
+и 
+\begin_inset Formula $\overrightarrow{p_{i}0}$
+\end_inset
+
+ всегда образуют правый поворот или всегда образуют левый поворот).
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Problem
+Есть диван и робот, которые имеют форму выпуклого многоугольника.
+ Определить ГМТ точек центра робота 
+\begin_inset Formula $R$
+\end_inset
+
+, где он может оказаться.
+\end_layout
+
+\begin_layout Problem
+Заметим, что ГМТ ограничивает некоторый многоугольник, который сильно похож
+ на сумму Минковского 
+\begin_inset Formula $D$
+\end_inset
+
+ и 
+\begin_inset Formula $R$
+\end_inset
+
+ (где через 
+\begin_inset Formula $D$
+\end_inset
+
+ обозначается диван).
+ Что происходит, когда робот пересекает диван? Тогда для вектора 
+\begin_inset Formula $\overrightarrow{x}$
+\end_inset
+
+ выполнено соотношение: 
+\begin_inset Formula $R+\overrightarrow{x}\cap D\ne\varnothing$
+\end_inset
+
+.
+ Значит, существуют такие 
+\begin_inset Formula $\overrightarrow{r}\in R$
+\end_inset
+
+, 
+\begin_inset Formula $\overrightarrow{d}\in D$
+\end_inset
+
+, такие что 
+\begin_inset Formula $\overrightarrow{r}+\overrightarrow{x}=\overrightarrow{d},$
+\end_inset
+
+ что равносильно 
+\begin_inset Formula $\overrightarrow{x}=\overrightarrow{d}-\overrightarrow{r}$
+\end_inset
+
+.
+ В итоге, 
+\begin_inset Formula $X=D\oplus(-R)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Problem
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection34$
+\end_inset
+
+.
+ Метод сканирующей прямой
+\end_layout
+
+\begin_layout Problem
+Задача 
+\begin_inset Quotes eld
+\end_inset
+
+Кассы
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Для каждой кассы известно время открытия и время закрытия касс.
+ Надо найти промежуток времени, в который кассы работают одновременно.
+ Таким образом, необходимо найти отрезок, в который работает хотя бы одна
+ касса.
+ 
+\end_layout
+
+\begin_layout Problem
+Можно рассматривать только началы и концы касс, и считать количество работающих
+ в данный момент количество касс.
+ Значит, надо найти периоды времени, в которые количество работающих касс
+ равно количеству касс.
+\end_layout
+
+\begin_layout Standard
+На задаче, рассмотренной выше, можно сформулировать идею метода сканирующей
+ прямой: есть некоторый набор событий, на каждое из которых можно реагировать
+ и решать определенные задачи.
+\end_layout
+
+\begin_layout Standard
+Рассмотрим некоторые задачи вычислительной геометрии, которые решаются при
+ помощи данного метода.
+\end_layout
+
+\begin_layout Problem
+Поиск наибольшего креста.
+ На плоскости расположены вертикальные и горизонтальные отрезки.
+ Найти 2 пересекающихся отрезка с максимальной суммой длин.
+\end_layout
+
+\begin_layout Problem
+Обрабатываем события:
+\end_layout
+
+\begin_layout Enumerate
+Начало горизонтального отрезка.
+\end_layout
+
+\begin_layout Enumerate
+Конец горизонтального отрезка (в первом и втором случаях надо изменить состояние
+ структуры данных).
+\end_layout
+
+\begin_layout Enumerate
+Появление вертикального отрезка (среди всех открытых горизонтальных отрезков
+ надо найти пересекающимися с ними и ищем самый длинный из них, чтобы попытаться
+ обновить ответ).
+ Заметим, что открытые горизонтальные отрезки, пересекающиеся с данным,
+ имеют последовательный диапазон.
+ Для этого можно использовать дерево отрезков (надо хранить отображение
+ из горизонтального отрезка в индекс в дереве отрезков).
+\end_layout
+
+\begin_layout Standard
+Таким образом, каждая операция будет обрабатываться за 
+\begin_inset Formula $O(\log N)$
+\end_inset
+
+ времени.
+\end_layout
+
+\begin_layout Remark
+Можно в качестве структуры для решения данной задачи можно использовать
+ декартово дерево (надо хранить 
+\begin_inset Formula $y$
+\end_inset
+
+-координату, 
+\begin_inset Formula $\max$
+\end_inset
+
+ на отрезке и приоритете в каждом узле).
+ Можно еще использовать 
+\begin_inset Formula $splay$
+\end_inset
+
+-дерево.
+\end_layout
+
+\begin_layout Problem
+Подсчет площади объединения прямоугольников на плоскоти.
+\end_layout
+
+\begin_layout Standard
+Рассмотрим следующие события:
+\end_layout
+
+\begin_layout Enumerate
+Начало прямоугольника.
+\end_layout
+
+\begin_layout Enumerate
+Конец прямоугольника.
+\end_layout
+
+\begin_layout Standard
+Как производится обработка события? Надо добавлять площадь объединения отрезков
+ при переходе от одного события к другому.
+ Для того, чтобы найти объединение отрезков, можно воспользоваться сканирующей
+ прямой.
+ Занумеруем все начала и концы.
+ В дереве отрезков будем хранить количество минимумов на отрезке и сам минимум
+ (и нам отстанется проссумировать количество минимумов, если этот минимум
+ равен 0, можно воспользоваться отложенными операциями).
+\end_layout
+
+\begin_layout Problem
+Поиск набора пересекающихся отрезков на плоскости (надо проверять два соседних
+ отрезка на порядок их изменения, и считать текущую позицию изменения отрезков).
+\end_layout
+
+\begin_layout Problem
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection35$
+\end_inset
+
+.
+ 
+\begin_inset Formula $K-d$
+\end_inset
+
+ дерево
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $K$
+\end_inset
+
+-d дерево разбивает множество точек на вертикальные и горизонтальные прямоугольн
+ики.
+\end_layout
+
+\begin_layout Algorithm
+Построение 
+\begin_inset Formula $K$
+\end_inset
+
+-d дерева.
+ 
+\end_layout
+
+\begin_layout Algorithm
+Разобьем множество точек (если их больше 1) в поддереве вертикальной или
+ горизонтальной прямой по медиане (чередуем горизонтальные и вертикальные
+ направления) (слева --- не больше медианы, справа --- больше).
+ В узлах дерева будут храниться проведенные прямые, а в листьях будут храниться
+ точки (когда размер поддерева равен 1).
+\end_layout
+
+\begin_layout Algorithm
+Заметим, что количество листьев равно 
+\begin_inset Formula $O(n)$
+\end_inset
+
+, а глубина дерева 
+\begin_inset Formula $O(\log n)$
+\end_inset
+
+.
+ Таким образом, размер дерева равен 
+\begin_inset Formula $O(n)$
+\end_inset
+
+, а построение данного алгоритма будет происходить за 
+\begin_inset Formula $O(n\log n)$
+\end_inset
+
+, если медиану искать за 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Problem
+Отвечать на запросы вида нахождения всех точек из прямоугольника 
+\begin_inset Formula $R$
+\end_inset
+
+ на плоскости.
+\end_layout
+
+\begin_layout LyX-Code
+def search(
+\begin_inset Formula $v$
+\end_inset
+
+, 
+\begin_inset Formula $R$
+\end_inset
+
+):
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if v == Leaf:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+//check and give result
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+if 
+\begin_inset Formula $v.left\cap R\ne\varnothing$
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+search(v.left, 
+\begin_inset Formula $R$
+\end_inset
+
+)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+if 
+\begin_inset Formula $v.right$
+\end_inset
+
+
+\begin_inset Formula $\cap$
+\end_inset
+
+
+\begin_inset Formula $R$
+\end_inset
+
+ 
+\begin_inset Formula $\ne\varnothing$
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+search(v.right, 
+\begin_inset Formula $R$
+\end_inset
+
+)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+Обозначим через 
+\begin_inset Formula $Q(n)$
+\end_inset
+
+ число регионов в поддереве из 
+\begin_inset Formula $n$
+\end_inset
+
+вершин, которые могут пересекать прямую 
+\begin_inset Formula $r$
+\end_inset
+
+(построенная по ребру многоугольника).
+ Так как мы делим на следующем ходу в другом направлении, то получим, что
+ 
+\begin_inset Formula $Q(n)=2+2*Q(\frac{n}{4})$
+\end_inset
+
+, (ибо с каждой стороны могут пересекать прямую 
+\begin_inset Formula $r$
+\end_inset
+
+).
+ Из этого следует, что 
+\begin_inset Formula $Q(n)=O(\sqrt{n})$
+\end_inset
+
+.
+ В 
+\begin_inset Formula $k$
+\end_inset
+
+-мерном случае, получаем 
+\begin_inset Formula $Q(n)=2^{k-1}+2^{k-1}Q(\frac{n}{2^{k}})$
+\end_inset
+
+, из чего можно получить оценку 
+\begin_inset Formula $Q(n)=O(n^{1-\frac{1}{k}})$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Problem
+Поиск ближайшей точки к данной на плоскости
+\end_layout
+
+\begin_layout Problem
+Будем использовать dfs, который начинает обход из лучшего поддерева.
+ Когда доходим до листа, то обновляем минимальное расстояние.
+ При этом, если понятно, что расстояние заведомо не обновляется, то можно
+ не заходить в ту часть дерева.
+\end_layout
+
+\begin_layout Standard
+Алгоритм работает в среднем хорошо, но есть анти-тест, в котором все точки
+ находятся на одинаковом расстоянии от центра.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection36$
+\end_inset
+
+.
+ Триангуляция Делоне
+\end_layout
+
+\begin_layout Definition
+Обозначим через 
+\begin_inset Formula $V$
+\end_inset
+
+ --- некоторое множество точек на плоскости.
+ Триангуляцией Делоне называется такая триангуляция плоскости, что для любого
+ треугольника из триангуляции его описанный круг содержит только вершины
+ треугольника.
+\end_layout
+
+\begin_layout Definition
+Для построения триангуляции будем добавлять по одной точке.
+ Будем считать, что никакие 4 точки не лежат на одной окружности, тогда
+ триангуляция будет единственной.
+\end_layout
+
+\begin_layout Claim
+(Критерий Делоне) Ребро 
+\begin_inset Formula $AB$
+\end_inset
+
+ принадлежит триангуляции Делоне, согда существует окружность с хордой 
+\begin_inset Formula $AB$
+\end_inset
+
+, внутренность которой не содержит других точек триангуляции.
+\end_layout
+
+\begin_layout Proof
+Необходимость.
+ Если ребро принадлежит триангуляции, то тогда существует треугольник, который
+ содержит данное ребро, и малым шевелением окружности получим требуемое.
+\end_layout
+
+\begin_layout Proof
+Достаточность.
+ Если не существует такой окружности, то тогда существует ребро 
+\begin_inset Formula $CD$
+\end_inset
+
+, которое отделяет точки 
+\begin_inset Formula $A$
+\end_inset
+
+ и 
+\begin_inset Formula $B$
+\end_inset
+
+.
+ Тогда можно понять, что сумма углов четырехугольника 
+\begin_inset Formula $ABCD$
+\end_inset
+
+ меньше 
+\begin_inset Formula $360^{\circ}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Definition
+Ребро 
+\begin_inset Formula $AB$
+\end_inset
+
+ называется хорошим в некоторой триангуляции, если 2 смежных с ней треугольника
+ подчиняются условию Делоне
+\end_layout
+
+\begin_layout Claim
+Все ребра в триангуляции 
+\begin_inset Formula $Tr$
+\end_inset
+
+ хорошие, согда 
+\begin_inset Formula $Tr$
+\end_inset
+
+ является триангуляцией Делоне.
+\end_layout
+
+\begin_layout Proof
+Достаточность очевидна.
+\end_layout
+
+\begin_layout Proof
+Необходимость.
+ Предположим, что существует треугольник 
+\begin_inset Formula $ABC$
+\end_inset
+
+ и точка 
+\begin_inset Formula $E$
+\end_inset
+
+, что 
+\begin_inset Formula $E$
+\end_inset
+
+ лежит в описанном круге треугольника 
+\begin_inset Formula $ABC$
+\end_inset
+
+.
+ При этом треугольник 
+\begin_inset Formula $ABE$
+\end_inset
+
+
+\begin_inset Formula $\notin Tr$
+\end_inset
+
+, ибо тогда ребро 
+\begin_inset Formula $AB$
+\end_inset
+
+ не является хорошим.
+ Тогда если точка 
+\begin_inset Formula $D$
+\end_inset
+
+ образует с 
+\begin_inset Formula $AB$
+\end_inset
+
+ треугольник из триангуляции, то она лежит вне описанного круга треугольника
+ 
+\begin_inset Formula $ABC$
+\end_inset
+
+.
+ Тогда 
+\begin_inset Formula $\angle BEA\text{>}\angle BDA$
+\end_inset
+
+, так как точка 
+\begin_inset Formula $E$
+\end_inset
+
+ лежит внутри, а точка 
+\begin_inset Formula $D$
+\end_inset
+
+ --- снаружи.
+ Значит точка 
+\begin_inset Formula $E$
+\end_inset
+
+ принадлежит описанному кругу треугольника 
+\begin_inset Formula $ABD$
+\end_inset
+
+.
+ Поэтому 
+\begin_inset Formula $\angle BEA<\angle BED$
+\end_inset
+
+, и этот угол будет возрастать, что и приводит к противоречию.
+\end_layout
+
+\begin_layout Algorithm
+Построение триангуляции Делоне.
+\end_layout
+
+\begin_layout Algorithm
+Будем строить триангуляцию итеративным образом.
+ Рассмотрим три варианта:
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $v_{i}\in\triangle ABC$
+\end_inset
+
+.
+ Ребра 
+\begin_inset Formula $v_{i}A$
+\end_inset
+
+, 
+\begin_inset Formula $v_{i}B$
+\end_inset
+
+, 
+\begin_inset Formula $v_{i}C$
+\end_inset
+
+ будут хорошими по критерию Делоне.
+ Действительно, построим окружности, содержащие только ребра 
+\begin_inset Formula $v_{i}A$
+\end_inset
+
+, 
+\begin_inset Formula $v_{i}B$
+\end_inset
+
+ и 
+\begin_inset Formula $v_{i}C$
+\end_inset
+
+.
+ Поэтому добавим их в триангуляцию, а с ребрами 
+\begin_inset Formula $AB$
+\end_inset
+
+, 
+\begin_inset Formula $BC$
+\end_inset
+
+ и 
+\begin_inset Formula $AC$
+\end_inset
+
+ поступим следующим образом: если новый круг содержит точку, смежную с труегольн
+иком 
+\begin_inset Formula $ABC$
+\end_inset
+
+, то произведем операцию 
+\begin_inset Formula $flip$
+\end_inset
+
+: замену ребра в новом четырехугольнике на противоположные.
+ Далее надо проверить новые противоположные ребра 
+\begin_inset Formula $AX$
+\end_inset
+
+ и 
+\begin_inset Formula $BX$
+\end_inset
+
+.
+ Суммарное количество ребер будет линейно, но позже будет доказано, что
+ количество 
+\begin_inset Formula $flip$
+\end_inset
+
+-ов будет линейно.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $v_{i}\in AB$
+\end_inset
+
+.
+ Обозначим смежные треугольники через 
+\begin_inset Formula $ABD$
+\end_inset
+
+ и 
+\begin_inset Formula $ABC$
+\end_inset
+
+.
+ Тогда ребра 
+\begin_inset Formula $Av_{i}$
+\end_inset
+
+, 
+\begin_inset Formula $Bv_{i},$
+\end_inset
+
+ 
+\begin_inset Formula $v_{i}C$
+\end_inset
+
+ и 
+\begin_inset Formula $v_{i}D$
+\end_inset
+
+ --- хорошие по критерию Делоне.
+ Аналогичным образом можно будет запускать 
+\begin_inset Formula $flip$
+\end_inset
+
+ для ребер 
+\begin_inset Formula $AB$
+\end_inset
+
+, 
+\begin_inset Formula $BC$
+\end_inset
+
+, 
+\begin_inset Formula $CD$
+\end_inset
+
+, 
+\begin_inset Formula $AD$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $v_{i}$
+\end_inset
+
+ лежит вне всех треугольников --- рассмотрим огромный треугольник, а затем
+ выкидываем лишние ребра.
+\end_layout
+
+\begin_layout Algorithm
+Построение минимального остовного дерева на плоскости.
+\end_layout
+
+\begin_deeper
+\begin_layout Claim
+Cамое легкое ребро разреза 
+\begin_inset Formula $S$
+\end_inset
+
+ и 
+\begin_inset Formula $V\backslash S$
+\end_inset
+
+ принадлежит триангуляции Делоне.
+\end_layout
+
+\begin_layout Proof
+Предположим противное.
+ Тогда рассмотрим окружность с диаметром данного ребра.
+ По критерию Делоне, существует точка внутри окружности, и найдется меньшее
+ расстояние в разрезе.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Для существования триангуляции Делоне необходима проекция плоскости на параболои
+д (можно почитать в литературе).
+\end_layout
+
+\begin_layout Standard
+В алгоритме Воронова в среднем на одно добавление точки приходиться около
+ 3 выполнений операции 
+\begin_inset Formula $flip$
+\end_inset
+
+ .
+ Так как 
+\begin_inset Formula $K-d$
+\end_inset
+
+ дерево работает в среднем за 
+\begin_inset Formula $O(\log n)$
+\end_inset
+
+, то триангуляция Делоне (при локализации треугольника), работает за 
+\begin_inset Formula $O(N\log N)$
+\end_inset
+
+ (в худшем случае эта вещь работает за 
+\begin_inset Formula $O(N^{2})$
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Algorithm
+Построение триангуляции Делоне методом 
+\begin_inset Quotes eld
+\end_inset
+
+разделяй и властвуй
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Algorithm
+Разбиваем множество пополам вертикальной прямой (если точек больше 12, иначе
+ действуем руками).
+ Далее их надо объединить.
+ Для этого мы смотрим самый нижний отрезок, соединяющий две части (он будет
+ стартовым отрезком).
+ Строить новый отрезок будем следующим образом: надуваем окружность, до
+ содержания одной из точек выпуклой оболочки (то есть, если 
+\begin_inset Formula $AB$
+\end_inset
+
+ --- текущий отрезок, то надо выбрать такую точку 
+\begin_inset Formula $C$
+\end_inset
+
+, которая находится выше отрезка 
+\begin_inset Formula $AB$
+\end_inset
+
+, при этом 
+\begin_inset Formula $\angle ACB$
+\end_inset
+
+ минимален).
+ При этом возможны два случая: точка 
+\begin_inset Formula $C$
+\end_inset
+
+ лежит на границе одного из двух выпуклых многоугольников (тогда просто
+ добавим этот отрезок и перейдем далее).
+ Оказывается, что 
+\begin_inset Formula $CA$
+\end_inset
+
+ принадлежит триангуляции Делоне, ибо окружность, описанная около треугольника
+ 
+\begin_inset Formula $ABC$
+\end_inset
+
+, не содержит других точек, поэтому можно воспользоваться критерием Делоне.
+ Осталось только удалить все ребра, которые пересекают отрезки 
+\begin_inset Formula $AC$
+\end_inset
+
+ и 
+\begin_inset Formula $CB$
+\end_inset
+
+, ибо при соединении данные точки будут использовании.
+ Шаг заканчивается в том случае, когда отрезок оказался верхним.
+\end_layout
+
+\begin_layout Algorithm
+Шаг алгоритма работает за 
+\begin_inset Formula $O(N)$
+\end_inset
+
+, ибо каждое ребро триангуляции Делоне (которая является планарным графом)
+ будет просмотрено не более двух раз.
+ В итоге, алгоритм работает за 
+\begin_inset Formula $O(N\log N)$
+\end_inset
+
+ детерминированным образом.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection37.$
+\end_inset
+
+ Диаграмма Вороного
+\end_layout
+
+\begin_layout Standard
+Задача: для каждой точки на плоскости (множество точек конечно) надо понять,
+ какая точка из множества является ближайшей.
+\end_layout
+
+\begin_layout Definition
+Диаграммой Вороного называется разбиение конечного множества 
+\begin_inset Formula $X$
+\end_inset
+
+ на ячейки 
+\begin_inset Formula $X_{i}$
+\end_inset
+
+ таким образом, что 
+\begin_inset Formula $X_{i}=\{y\,|\,\rho(x_{i},y)\rightarrow min\}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Существует тривиальный алгоритм за 
+\begin_inset Formula $O(N^{4})$
+\end_inset
+
+, который просматривает серединные перпендикуляры любой пары точек, а затем
+ их пересекает.
+\end_layout
+
+\begin_layout Claim
+Ребро 
+\begin_inset Formula $AB$
+\end_inset
+
+ принадлежит триангуляции Делоне тогда и только тогда, когда ячейки 
+\begin_inset Formula $C(A)$
+\end_inset
+
+ и 
+\begin_inset Formula $C(B)$
+\end_inset
+
+ диаграммы Воронова имеют общую границу (хотя бы точку).
+\end_layout
+
+\begin_layout Proof
+Заметим, что если рассмотреть пересечение ячеек диаграммы Воронова, то эта
+ точка будет центром окружности многоугольника, которые создают данные ячейки.
+\end_layout
+
+\begin_layout Proof
+
+\shape italic
+Достаточность.
+
+\shape default
+ Существует точка на серединном перпендикуляре, окружность которого содержит
+ только необходимые точки.
+ Следовательно, по критерию Делоне, ребро 
+\begin_inset Formula $AB$
+\end_inset
+
+ будет принадлежать триангуляции Делоне.
+\end_layout
+
+\begin_layout Proof
+
+\shape italic
+Необходимость.
+ 
+\shape default
+По критерию Делоне строим окружность с хордой 
+\begin_inset Formula $AB,$
+\end_inset
+
+ не содержащей других точек.
+ Тогда её центр принадлежит границе ячеек 
+\begin_inset Formula $C(A)$
+\end_inset
+
+ и 
+\begin_inset Formula $C(B)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Algorithm
+Построение диаграммы Вороного (алгоритм Форчуне)
+\end_layout
+
+\begin_layout Algorithm
+Будем использовать метод сканирующей прямой.
+ Рассмотрим для каждой из точек ГМТ, таких что расстояния до прямой и до
+ точки совпадают (как известно, данное ГМТ является параболой).
+\end_layout
+
+\begin_layout Algorithm
+Рассмотрим несколько случаев событий:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Появление новой точки (пересечение серединных перпендикуляров будет лежать
+ правее --- есть проблема, нельзя сразу обработать).
+ Поэтому надо просмотреть события, которые могут быть связаны со смежными
+ серединными перпендикулярами (изначально добавится пересечение серединных
+ перпендикуляров 
+\begin_inset Formula $O$
+\end_inset
+
+ треугольника 
+\begin_inset Formula $ABC$
+\end_inset
+
+, где 
+\begin_inset Formula $A$
+\end_inset
+
+ --- добавленная точка), и если они идут раньше, то необходимо удалить событие
+ с точкой 
+\begin_inset Formula $O$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Пересечение серединных перпендикуляров (аннигиляция параболы).
+ В итоге, пары смежных к данной ячейке пересекаются.
+ Надо добавить новый серединный перпендикуляр двух 
+\begin_inset Quotes eld
+\end_inset
+
+встреченных
+\begin_inset Quotes erd
+\end_inset
+
+ точек, открытый в необходимую сторону, и добавляем в пересечение ожидаемых
+ ребят (которые были соседними со встреченными вершинами).
+\end_layout
+
+\begin_layout Enumerate
+Пересечение хотя бы трех серединных перпендикуляров --- добавление всех
+ новых серединных перпендикуляров во встрече.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Время работы алгоритма состоит из сортировки точек 
+\begin_inset Formula $O(N\log N)$
+\end_inset
+
+, и поиск локализации событий при хранении в сете выполняется в сумме за
+ 
+\begin_inset Formula $O(N\log N)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part
+Параллельные алгоритмы
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection38$
+\end_inset
+
+.
+ Потоки
+\end_layout
+
+\begin_layout Standard
+Изначально процессоры уже затачивались на многозадачности, при этом выполнялся
+ процесс 
+\shape italic
+task scheduling, 
+\shape default
+в котором происходило переключение контекста (было некоторое время на смену).
+ Таким образом, уже было писать многопоточные программы.
+ При наличии нескольких ядер на машине, можно уменьшить накладные расходы
+ (можно перераспределять процессы).
+ В Windows есть 7 приоритетов процессов и 7 приоритетов потоков (в сумме
+ их 35).
+\end_layout
+
+\begin_layout Standard
+У процессов ресурсы не зависимы, а у потоков есть одно общее виртуальное
+ адресное пространство (в 32-битных системах под код и данные отдается ровно
+ 3 Гб информации, остальные используются на адрес ядра).
+ В начале есть участок из 64 кб, отведенный на нулевой указатель (в начале
+ участка ядра есть аналогичное пространство).
+ В 
+\begin_inset Formula $x86$
+\end_inset
+
+ используется 4 Тб виртуального адресного пространства (при записи связывается
+ с реальным адресным пространством).
+ 
+\end_layout
+
+\begin_layout Standard
+Если на машине есть одно ядро, то не надо синхронизировать доступ (raise-conditi
+on не будет).
+ У каждого потока есть свой стек.
+ По умолчанию, размер стека в Windows равен 1 Мб.
+ Перед распараллеливанием можно узнать информацию о возможности распаллеливания
+ процессов (количество ядер и возможное количество запускаемых потоков).
+\end_layout
+
+\begin_layout Standard
+Многопоточность необходима для:
+\end_layout
+
+\begin_layout Itemize
+Ускорения работы программы
+\end_layout
+
+\begin_layout Itemize
+Разделения задач (отделение от интерфейса, к примеру).
+ Можно реализовать механизм call-back-ов (прогресс о выполнении потока).
+\end_layout
+
+\begin_layout Standard
+Рассмотрим 
+\begin_inset Formula $API$
+\end_inset
+
+ для использования в 
+\begin_inset Formula $STL\ \mbox{C++}11$
+\end_inset
+
+ .
+ В 11-м стандарте появился заголовочный файл 
+\begin_inset Formula $thread$
+\end_inset
+
+.
+ Функция инициализации потока равнозначна точке входа (вызываются конструкторы
+ статических полей класса перед main, после вызова --- вызываются деструктора).
+ Поток завершает свою работу, когда функция потока закончит свою работу,
+ либо когда функция 
+\begin_inset Formula $main$
+\end_inset
+
+ завершит работу, либо когда вызываются 
+\begin_inset Formula $terminate$
+\end_inset
+
+ процессы (искусственное прерывание потоков).
+ К примеру, если есть unhandled exception, то тот вызывает terminate.
+\end_layout
+
+\begin_layout LyX-Code
+#include <thread>
+\end_layout
+
+\begin_layout LyX-Code
+void doSmth();
+\end_layout
+
+\begin_layout LyX-Code
+int main() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::thread t(doSmth); //инициализация потока
+\end_layout
+
+\begin_layout LyX-Code
+t.join(); // ожидание завершения выполнения функции потока
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Как можно заметить, что класс 
+\begin_inset Formula $thread$
+\end_inset
+
+ не является шаблонным, но его конструктор является мощным шаблоном (можно
+ передать функтор, который имеет оператор круглые скобки).
+\end_layout
+
+\begin_layout Standard
+Как это выглядеть?
+\end_layout
+
+\begin_layout LyX-Code
+class BackgroundTask {
+\end_layout
+
+\begin_layout LyX-Code
+public:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+void operator()() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+doSmth...
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+BackgroundTask task;
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t(task);
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t2(BackGroundTask());
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t3([] {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+doSmth...; // лябмбды видят локальные параметры (но появляется невалидность
+ при создании нового потока)
+\end_layout
+
+\begin_layout LyX-Code
+// но, скорее всего, можно передать параметры по значению
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+});
+\end_layout
+
+\begin_layout Standard
+Существуют две возможности управления потоком: join и detach (отвязать объект
+ thread от потока).
+ Если был вызван деструктор 
+\begin_inset Formula $thread$
+\end_inset
+
+, а поток не завершил работу и приаттачен к сущности std::thread, то вызывается
+ std::terminate.
+\end_layout
+
+\begin_layout LyX-Code
+bool thread::joinable(); // возвращает true, если поток жив и присоединен
+\end_layout
+
+\begin_layout Standard
+Напишем плохой код:
+\end_layout
+
+\begin_layout LyX-Code
+struct Functor {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+int& data;
+\end_layout
+
+\begin_layout LyX-Code
+Functor(int& _data): data(_data) {}
+\end_layout
+
+\begin_layout LyX-Code
+void operator() () {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+for (int i = 0; i < 1000000; ++i) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+data = i;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+void Oops() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+int localData = 0;
+\end_layout
+
+\begin_layout LyX-Code
+Functor f(localData);
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t(f);
+\end_layout
+
+\begin_layout LyX-Code
+t.detach();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+В данном коде есть проблема: порча стека, меняя данные в нем или можно получить
+ access violation.
+\end_layout
+
+\begin_layout LyX-Code
+void notOops() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+int localData = 0;
+\end_layout
+
+\begin_layout LyX-Code
+Functor f(localData);
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t(f);
+\end_layout
+
+\begin_layout LyX-Code
+try {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+doSmth(); // без обработки поток получает terminate
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+} catch (...) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+t.join();
+\end_layout
+
+\begin_layout LyX-Code
+throw ...;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+t.join();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Лучше всего писать так (идеология RAII --- Resouce Acquisiton Is Initializing,
+ гарантия освобождения ресурсов в деструкторе)
+\end_layout
+
+\begin_layout LyX-Code
+class ThreadGuard {
+\end_layout
+
+\begin_layout LyX-Code
+public:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+ThreadGuard(std::thread& _t): t(_t)
+\end_layout
+
+\begin_layout LyX-Code
+~ThreadGuard() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if (t.joinable()) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+t.join();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+private:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::thread& t;
+\end_layout
+
+\begin_layout LyX-Code
+ThreadGuard(const ThreadGuard& other) = delete; //запрет конструктора копировани
+я
+\end_layout
+
+\begin_layout LyX-Code
+ThreadGuard& operator =(const ThreadGuard& other) = delete; // запрет присваиван
+ия, 
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+void notOopsNeo() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+int localData = 0;
+\end_layout
+
+\begin_layout LyX-Code
+Functor f(localData);
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t(f);
+\end_layout
+
+\begin_layout LyX-Code
+ThreadGuard g(t);
+\end_layout
+
+\begin_layout LyX-Code
+doSmth();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+В поток можно передавать параметры, они передаются по значению.
+\end_layout
+
+\begin_layout LyX-Code
+template<class F, class ...
+ Args>
+\end_layout
+
+\begin_layout LyX-Code
+std::thread::thread(F, Args...)
+\end_layout
+
+\begin_layout Standard
+Напишем пример передачи параметров в thread (с косяком):
+\end_layout
+
+\begin_layout LyX-Code
+void func(const string& s) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+void oopsK(int param) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+char* buffer = new char[1024];
+\end_layout
+
+\begin_layout LyX-Code
+sprintf(buffer, 
+\begin_inset Quotes eld
+\end_inset
+
+%i
+\begin_inset Quotes erd
+\end_inset
+
+, param);
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t(func, buffer); // buffer будет скопирован как указатель, а
+ преобразование к string
+\end_layout
+
+\begin_layout LyX-Code
+//будет выполняться в контексте другого потока
+\end_layout
+
+\begin_layout LyX-Code
+t.detach();
+\end_layout
+
+\begin_layout LyX-Code
+delete[] buffer; // плохо, ибо поток он передаст указатель на разрушенную
+ область памяти
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Именно поэтому многопоточные программы сложно отлаживать (во-первых, контроль
+ ресурсов, во-вторых, слежение для блокировки).
+ Лучше написать так:
+\end_layout
+
+\begin_layout LyX-Code
+std::thread t(func, std::string(buffer));
+\end_layout
+
+\begin_layout Standard
+Далее рассмотрим Interlock-functions (atomic functions), который используется
+ для счетчика ссылок.
+\end_layout
+
+\begin_layout Standard
+Информация о потоках разрешается при помощи функции std::hardware_concurrency()
+ --- статическая функция, возвращающая действительное число ядер.
+ Потоки можно идентифицировать (
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+std::thread::id myId = t.get_id()
+\end_layout
+
+\end_inset
+
+).
+ Также в Windows можно использовать следующие функции: id потока (unsigned
+ int), HANDLE потока (объект ядра, с которыми работают Windows-функции,
+ можно распознать объект ядра по 32 битам информации).
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection39$
+\end_inset
+
+.
+ Разделение данных между потоками
+\end_layout
+
+\begin_layout Standard
+Рассмотрим способы разделения данных между потоками.
+ Если данные доступны только для чтения, то их разделять не надо.
+ Если данные доступны для записи, то могут возникнуть проблемы.
+\end_layout
+
+\begin_layout Standard
+К примеру, рассмотрим операцию удаления из двусвязного списка: 1) надо сначала
+ найти удалить элемент 
+\begin_inset Formula $x$
+\end_inset
+
+; 2) затем надо перенаправить указатели; 3) выполнить delete.
+ В итоге, если второй поток желает работать в середине удаления элемента
+ из списка, то возникнут проблемы (список становится невалидным).
+ 
+\end_layout
+
+\begin_layout Standard
+Возникает понятие 
+\shape italic
+
+\begin_inset Quotes eld
+\end_inset
+
+race condition
+\begin_inset Quotes erd
+\end_inset
+
+
+\shape default
+ (гонка за ресурсами).
+ Как можно бороться с race condition:
+\end_layout
+
+\begin_layout Enumerate
+Защищенный доступ данных.
+\end_layout
+
+\begin_layout Enumerate
+Изменить структуру таким образом, чтобы ее изменение состоит из набора независим
+ых изменений (Lock-free programming)
+\end_layout
+
+\begin_layout Enumerate
+Транзакционная работа: есть набор изменений, а затем происходит либо commit,
+ либо rollback (если был конфликт со стороны другого потока) на все операции.
+\end_layout
+
+\begin_layout Standard
+Мы будем выполнять блокировки.
+ Разобьем кусок на блоки и пометим его таким образом, чтобы его мог выполнять
+ только один поток.
+ Надо создать mutex (mutually exclusive).
+\end_layout
+
+\begin_layout LyX-Code
+mutex.lock()
+\end_layout
+
+\begin_layout LyX-Code
+// some code
+\end_layout
+
+\begin_layout LyX-Code
+mutex.unlock()
+\end_layout
+
+\begin_layout LyX-Code
+// есть mutex.try_lock(), который пытается зайти
+\end_layout
+
+\begin_layout Standard
+Этот механизм использует стандартные объект ядра.
+\end_layout
+
+\begin_layout Standard
+В WinAPI есть CRITICAL_SECTION и методы EnterCriticalSection, TryCriticalSection
+ и LeaveCriticalSection (в одном процессе), также можно создать мютекс:
+\end_layout
+
+\begin_layout LyX-Code
+HANDLE CreateMutex(..., name)
+\end_layout
+
+\begin_layout LyX-Code
+HANDLE OpenMutex(..., name)
+\end_layout
+
+\begin_layout LyX-Code
+//можно синхронизировать разные процессы
+\end_layout
+
+\begin_layout Standard
+Критическая секция --- это пара из mutex и количество локов (если локов
+ 0, то идет выполнение, иначе --- режим ожидания).
+ Если unlock не происходит быстро, то влетающий поток может уйти в спячку
+ надолго.
+ Чтобы такого не возникало, использовался EnterCritSectionWithSpinCount
+ (атомарный count).
+\end_layout
+
+\begin_layout Standard
+Чтобы выполнять проверку на то, чтобы выполнить unlock, существует std::lock_gua
+rd:
+\end_layout
+
+\begin_layout LyX-Code
+std::list<int> myList;
+\end_layout
+
+\begin_layout LyX-Code
+std::mutex myMutex;
+\end_layout
+
+\begin_layout LyX-Code
+void addToList(int value) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::lock_guard<std::mutex> guard(myMutex);
+\end_layout
+
+\begin_layout LyX-Code
+myList.push_back(value);
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+//Нельзя возвращать всякого рода ссылки на стек!!
+\end_layout
+
+\begin_layout Standard
+Напишем потоконезависимый стек:
+\end_layout
+
+\begin_layout LyX-Code
+class thread_safe_stack {
+\end_layout
+
+\begin_layout LyX-Code
+public:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+bool empty() const;
+\end_layout
+
+\begin_layout LyX-Code
+size_t size() const;
+\end_layout
+
+\begin_layout LyX-Code
+T pop(); // not good interface
+\end_layout
+
+\begin_layout LyX-Code
+void pop();
+\end_layout
+
+\begin_layout LyX-Code
+void push(const T& e);
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+private:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::stack<T> _internalStack;
+\end_layout
+
+\begin_layout LyX-Code
+std::mutex m;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Но реализация ломается на таком коде:
+\end_layout
+
+\begin_layout LyX-Code
+thread_safe_stack<int> s;
+\end_layout
+
+\begin_layout LyX-Code
+if (!s.empty()) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+const int value = s.top();
+\end_layout
+
+\begin_layout LyX-Code
+s.pop();
+\end_layout
+
+\begin_layout LyX-Code
+doSmth(value);
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Проблема состоит в том, что top-ы сработают одновременно, а удаляться будет
+ другой элемент.
+ Аналогично нельзя возвращать pop по значению.
+\end_layout
+
+\begin_layout Standard
+Напишем исправленный вариант:
+\end_layout
+
+\begin_layout LyX-Code
+std::shared_ptr<T> pop() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::lock_guard<std::mutex> lock(m);
+\end_layout
+
+\begin_layout LyX-Code
+if (internal_stack.empty()) throw empty_stack.exception();
+\end_layout
+
+\begin_layout LyX-Code
+std::shared_ptr<T> res(std::make_shared<T> (internal_stack.top()));
+\end_layout
+
+\begin_layout LyX-Code
+internal_stack.pop();
+\end_layout
+
+\begin_layout LyX-Code
+return res;
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Перейдем к рассмотрению взаимных блокировок (Dead Lock):
+\end_layout
+
+\begin_layout LyX-Code
+// Thread-1
+\end_layout
+
+\begin_layout LyX-Code
+mutexA.lock()
+\end_layout
+
+\begin_layout LyX-Code
+mutexB.lock()
+\end_layout
+
+\begin_layout LyX-Code
+//Thread-2
+\end_layout
+
+\begin_layout LyX-Code
+mutexB.lock()
+\end_layout
+
+\begin_layout LyX-Code
+mutexA.lock()
+\end_layout
+
+\begin_layout Standard
+Несколько советов:
+\end_layout
+
+\begin_layout Enumerate
+Блокировать сначала mutexA, а затем только блокировать mutexB
+\end_layout
+
+\begin_layout Enumerate
+Объединить всесозможные блокировки в один класс и выстраивать их иерархию.
+\end_layout
+
+\end_body
+\end_document

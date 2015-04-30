@@ -1,0 +1,2505 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage[all]{xy}
+\usepackage{pgf,tikz}
+\usepackage{mathrsfs}
+\usetikzlibrary{arrows}
+\end_preamble
+\use_default_options true
+\begin_modules
+theorems-ams-bytype
+theorems-ams-extended-bytype
+theorems-sec-bytype
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1cm
+\topmargin 2cm
+\rightmargin 1cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Функциональное программирование
+\end_layout
+
+\begin_layout Author
+Akhtyamov Pavel
+\end_layout
+
+\begin_layout Section
+Деревья
+\end_layout
+
+\begin_layout Subsection
+Деревья общего вида
+\end_layout
+
+\begin_layout Standard
+Деревья используются в структурах данных (к примеру, для двоичного поиска),
+ в синтаксическом анализе, и у них различная структура.
+\end_layout
+
+\begin_layout Standard
+Дерево - элемент типа 
+\begin_inset Formula $T$
+\end_inset
+
+ + список деревьев типа 
+\begin_inset Formula $T$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let rec map f = function
+\end_layout
+
+\begin_layout Plain Layout
+
+| Leaf(x) -> Leaf(f x)
+\end_layout
+
+\begin_layout Plain Layout
+
+| Node(x, l) -> Node(f x, List.map (map f) l)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Fold (правая свертка, раскрывается снизу вверх)
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let rec fold f i = function
+\end_layout
+
+\begin_layout Plain Layout
+
+| Leaf(x) -> f i x
+\end_layout
+
+\begin_layout Plain Layout
+
+| Node(x, l) -> l |> List.fold (fold f) (f i x)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Exercise
+Отображение - отрубить листья у дерева.
+\end_layout
+
+\begin_layout Example
+Абстрактное синтаксическое дерево
+\end_layout
+
+\begin_layout Example
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+type 't Expr = 
+\end_layout
+
+\begin_layout Plain Layout
+
+| Add of 't * Expr * 't Expr
+\end_layout
+
+\begin_layout Plain Layout
+
+| Sub of 't * Expr * 't Expr
+\end_layout
+
+\begin_layout Plain Layout
+
+| Mul of 't * Expr * 't Expr
+\end_layout
+
+\begin_layout Plain Layout
+
+| Div of 't * Expr * 't Expr
+\end_layout
+
+\begin_layout Plain Layout
+
+| Neg of 't * Expr
+\end_layout
+
+\begin_layout Plain Layout
+
+| Value of 't
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+let rec compute = function
+\end_layout
+
+\begin_layout Plain Layout
+
+| Add(x, y) -> compute x + compute y
+\end_layout
+
+\begin_layout Plain Layout
+
+| Sub(x, y) -> compute x - compute y
+\end_layout
+
+\begin_layout Plain Layout
+
+| Mul(x, y) -> compute x * compute y
+\end_layout
+
+\begin_layout Plain Layout
+
+| Div(x, y) -> compute x / compute y
+\end_layout
+
+\begin_layout Plain Layout
+
+| Neg(x) -> -compute x
+\end_layout
+
+\begin_layout Plain Layout
+
+| Value(x) -> x
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Example
+Как построить по списку дерево? Для этого есть разбор выражения в дерево.
+ На вход получить поток, взять столько, сколько смогло сработать (а затем
+ вернуть оставшуюся часть).
+ Возвращается дерево и хвост, который не обработан.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let mknode = function
+\end_layout
+
+\begin_layout Plain Layout
+
+| '+' -> Add
+\end_layout
+
+\begin_layout Plain Layout
+
+| '-' -> Sub
+\end_layout
+
+\begin_layout Plain Layout
+
+| '*' -> Mul
+\end_layout
+
+\begin_layout Plain Layout
+
+| '/' -> Div
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+let parse_infix expr = 
+\end_layout
+
+\begin_layout Plain Layout
+
+	let rec ff = function
+\end_layout
+
+\begin_layout Plain Layout
+
+	| [] -> failwith "Error"
+\end_layout
+
+\begin_layout Plain Layout
+
+	| h::t when isDigit -> parse
+\end_layout
+
+\begin_layout Plain Layout
+
+	| h::t when h= ' ' -> ff t
+\end_layout
+
+\begin_layout Plain Layout
+
+	| h::t when h='~' -> // negate
+\end_layout
+
+\begin_layout Plain Layout
+
+		...
+\end_layout
+
+\begin_layout Plain Layout
+
+	| h::t -> ...
+ // binary
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Дерево может порождаться функцией (в не чисто функциональных языках).
+\end_layout
+
+\begin_layout Subsection
+Двоичные деревья
+\end_layout
+
+\begin_layout Standard
+Двоичное дерево представляется в виде узла и двух детей.
+\end_layout
+
+\begin_layout Standard
+Есть несколько обходов двоичного дерева:
+\end_layout
+
+\begin_layout Itemize
+Префиксный
+\end_layout
+
+\begin_layout Itemize
+Инфиксный
+\end_layout
+
+\begin_layout Itemize
+Постфиксный
+\end_layout
+
+\begin_layout Standard
+Можно заменить энергичные вычисления на ленивые (см.
+ код).
+\end_layout
+
+\begin_layout Standard
+Двоичное дерво - все элементы меньше --- слева, больше --- справа
+\end_layout
+
+\begin_layout Standard
+Хвостовая рекурсия для дерева: вроде бы невозможно (нет линейности).
+ Но используется подход продолжения.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let plus1 x f = f(x+1)
+\end_layout
+
+\begin_layout Plain Layout
+
+let times2 x f = f (x*2)
+\end_layout
+
+\begin_layout Plain Layout
+
+plus1 1 (fun x -> times 2 x (printfn "%d")) // order way used
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Иногда удобно использовать аккумулятор вкупе с продолжением (для левого
+ поддерева считаем, для правого --- запоминаем, что должны вычислить).
+\end_layout
+
+\begin_layout Corollary
+Таким образом, хотя и дереьев нет в библиотеке, они позволяют организовать
+ достаточно интересные и богатые структуры данных.
+\end_layout
+
+\begin_layout Section
+Погружение в функциональную составляющую
+\end_layout
+
+\begin_layout Standard
+Очередь на списке --- это плохо (необходим кольцевой список).
+ Надо придумывать реализацию (Chris Okazaki).
+ Нам надо помещать быстро элемент в очередь и изымать начало.
+ Подойдет реализация на двух стеках.
+ Перестройка амортизационно идет за 
+\begin_inset Formula $O(1)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let tail(L,R) = 
+\end_layout
+
+\begin_layout Plain Layout
+
+match L with
+\end_layout
+
+\begin_layout Plain Layout
+
+| [x] -> (List.rev R, [])
+\end_layout
+
+\begin_layout Plain Layout
+
+| h::t -> (t, R)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Рассмотрим ZipperList (двунаправленный список с выделенным текущим элементом,
+ реализация --- alt+Tab и машина Тьюринга).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $Zipper$
+\end_inset
+
+ может рассматриваться не только на списках, но и на других структурах,
+ в частности, на дереве (написать get для последовательности элементов).
+ Далее хотим, чтобы элемент был доступен корню (идея --- поддерево будет
+ перекидываться в левый список), т.е идем налево --- запоминаем правое поддерево
+ и наоборот.
+ Таким образом, аналог 
+\begin_inset Formula $Zipper$
+\end_inset
+
+ --- устройство директорий в проводнике.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $Zipper$
+\end_inset
+
+ подчиняются дифференцированию: если 
+\begin_inset Formula $T(A,R)=1+A*R*R$
+\end_inset
+
+, то тогда 
+\begin_inset Formula $Z=2*A*R$
+\end_inset
+
+, где 
+\begin_inset Formula $2=Left|Right$
+\end_inset
+
+, 
+\begin_inset Formula $A$
+\end_inset
+
+ --- сохраняемый корневой элемент, 
+\begin_inset Formula $B$
+\end_inset
+
+ --- путь.
+\end_layout
+
+\begin_layout Subsection
+Числовые структуры данных
+\end_layout
+
+\begin_layout Standard
+Сложение можно ассоциировать со списками и, к примеру, ординалами.
+ При этом сложение будет выполняться за 
+\begin_inset Formula $O(n)$
+\end_inset
+
+.
+ Но в десятичной системе числа складывать удобнее.
+ Числовые структуры данных напоминают числа и группировку данных по образцу.
+ Оптимальная позиционная система счисления --- по основанию 
+\begin_inset Formula $e$
+\end_inset
+
+.
+ Но используют двоичные списки.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+type 'a blist = 
+\end_layout
+
+\begin_layout Plain Layout
+
+| Nil
+\end_layout
+
+\begin_layout Plain Layout
+
+| Zero of ('a*'a) blist
+\end_layout
+
+\begin_layout Plain Layout
+
+| One of 'a * ('a * 'a) blist
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+Nil --- 0
+\end_layout
+
+\begin_layout Plain Layout
+
+One (1, Nil) ---1
+\end_layout
+
+\begin_layout Plain Layout
+
+Zero(One (1,2), Nil) ---2
+\end_layout
+
+\end_inset
+
+, и т.д.
+\end_layout
+
+\begin_layout Subsection
+Замыкания
+\end_layout
+
+\begin_layout Standard
+Рассмотрим функцию вычисления производной:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let deriv f (dx: float) = 
+\end_layout
+
+\begin_layout Plain Layout
+
+	fun x -> (f(x + dx) - f(x))/dx
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Но проблемы в том, что 
+\begin_inset Formula $f$
+\end_inset
+
+ и 
+\begin_inset Formula $dx$
+\end_inset
+
+ запомнились.
+ В итоге, в функциональных языках мы можем пользоваться функциями с внутренними
+ состояниями.
+ А когда можно забыть переменную, которую мы захватили? Нужен 
+\begin_inset Formula $Garbage\ Collector$
+\end_inset
+
+! Но замыкания достаточно сложно реализуемы.
+\end_layout
+
+\begin_layout Standard
+Как можно пользоваться замыканиями?
+\end_layout
+
+\begin_layout Standard
+В 
+\begin_inset Formula $F\#$
+\end_inset
+
+ есть механизм, позволяющий использовать динамическое связывание.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let mutable x = 4
+\end_layout
+
+\begin_layout Plain Layout
+
+let adder y = x + y
+\end_layout
+
+\begin_layout Plain Layout
+
+adder 1
+\end_layout
+
+\begin_layout Plain Layout
+
+x <- 3
+\end_layout
+
+\begin_layout Plain Layout
+
+adder 1
+\end_layout
+
+\end_inset
+
+Из примера видно, что сохраняется ссылка.
+\end_layout
+
+\begin_layout Standard
+Замыкание возникает при частичном применении функции.
+ При 
+\begin_inset Formula $(+)\ 1$
+\end_inset
+
+ есть ссылка на библиотечную функцию.
+\end_layout
+
+\begin_layout Standard
+Рассмотрим специализацию:
+\end_layout
+
+\begin_layout Standard
+Программа: 
+\begin_inset Formula $P:I\rightarrow O$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Interpreter: 
+\begin_inset Formula $Source\rightarrow Input\rightarrow Output$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Compiled=
+\begin_inset Formula $(Interpreter\ Source):\ Input\rightarrow Output$
+\end_inset
+
+.
+ На таком подходе 
+\begin_inset Formula $Futamura\ Projection$
+\end_inset
+
+ возник подход суперкомпляции (лазить внутри кода и оптимизация в нем).
+\end_layout
+
+\begin_layout Subsection
+Генераторы
+\end_layout
+
+\begin_layout Standard
+Файл больше самого большого массива (ибо нам надо последовательный участок
+ памяти).
+ Но ведь можно считать все посимвольно, и возникает понятие генератора (производ
+ить последовательность вычислений, возможно, бесконечную).
+ Это можно реализовать на императивно-функциональном языка (взято с 
+\begin_inset Formula $Lisp$
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+type cell = {mutable content: int}
+\end_layout
+
+\begin_layout Plain Layout
+
+let new_counter n =
+\end_layout
+
+\begin_layout Plain Layout
+
+	let x = {content = n} in
+\end_layout
+
+\begin_layout Plain Layout
+
+	fun () -> (x.content <- x.conten + 1; x.content)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Можно использовать 
+\begin_inset Formula $ref$
+\end_inset
+
+.
+ Счетчик --- частный случай генератора.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let new_generator fgen init = 
+\end_layout
+
+\begin_layout Plain Layout
+
+	let x = ref init in
+\end_layout
+
+\begin_layout Plain Layout
+
+	fun () -> (x:= fgen |x; |x)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+let fib = new_generator (fun(u,v) -> (u+v, u)) (1,1) // pairs
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+let map f g = fun() -> f(g())
+\end_layout
+
+\begin_layout Plain Layout
+
+let fibs = (fib |> map fst)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Можно описать функцию 
+\begin_inset Formula $filter$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+С помощью генераторов можно генерировать бесконечные последовательности.
+\end_layout
+
+\begin_layout Section
+Монады
+\end_layout
+
+\begin_layout Standard
+Монады необходимы, к примеру, для организации ввода-вывода (технология была
+ создана в 1991 году).
+\end_layout
+
+\begin_layout Standard
+К примеру, есть куча проверок на 
+\begin_inset Formula $null$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout LyX-Code
+let read() = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+printf 
+\begin_inset Quotes eld
+\end_inset
+
+>
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+let s = Console.Readline()
+\end_layout
+
+\begin_layout LyX-Code
+try
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+Some(int(s))
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+with
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+_ -> None
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+Для сложения двух чисел в таком коде необходимо выполнить много проверок
+ (если надо было бы складывать 10 чисел, то получилось плохо).
+ Хотелось бы ввести число, сложить его, и так далее (отделить смысловой
+ алгоритм от промежуточных проверок).
+\end_layout
+
+\begin_layout LyX-Code
+let bind a f = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if a = None then None
+\end_layout
+
+\begin_layout LyX-Code
+else f (a.Value)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+bind (read()) (fun x -> bind (read()) (fun y -> Some(x + y))
+\end_layout
+
+\begin_layout Standard
+Или
+\end_layout
+
+\begin_layout LyX-Code
+let (>>=) a f = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if a = None then None
+\end_layout
+
+\begin_layout LyX-Code
+else f (a.Value)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+read() >>= fun x -> read() >>= fun y -> Some(x + y)
+\end_layout
+
+\begin_layout Standard
+Код был приведен к простому виду.
+\end_layout
+
+\begin_layout Standard
+Недетерминированные вычисления: Вася 2000 года рождения, Петя в два, либо
+ в 3 раза старшу, а Лена на год старше Пети.
+ Сколько лет Лене?
+\end_layout
+
+\begin_layout LyX-Code
+let (>>=) mA f = List.collect f mA
+\end_layout
+
+\begin_layout LyX-Code
+[10;11] >>= (fun x -> [x*2; x*3]) >>= (fun x -> [x+1])
+\end_layout
+
+\begin_layout Standard
+Как видно, что обработка скинута в bind.
+\end_layout
+
+\begin_layout Standard
+Можно ввести операции типа return:
+\end_layout
+
+\begin_layout LyX-Code
+let ret x = [x]
+\end_layout
+
+\begin_layout LyX-Code
+let ret' x = x
+\end_layout
+
+\begin_layout LyX-Code
+let fail = []
+\end_layout
+
+\begin_layout LyX-Code
+ret' [10;11] >>= (fun x -> ret' [x*2;x*3]) >>= (fun x -> ret (x + 1))
+\end_layout
+
+\begin_layout Standard
+Перейдем к определению монад:
+\end_layout
+
+\begin_layout Itemize
+Для каждого базового типа есть обрамляющий тип M<t>
+\end_layout
+
+\begin_layout Itemize
+Есть операция return: 't -> M<'t>
+\end_layout
+
+\begin_layout Itemize
+Есть операция композиции bind:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula $>>=:M<'a>\rightarrow(a->M<'b>)\rightarrow M<'b>$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Таким образом, монады описывают последовательное применение вычислений,
+ но логика спрятана внутри (можно спрятать всю магию в 
+\begin_inset Quotes eld
+\end_inset
+
+;
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Standard
+Монада MayBe:
+\end_layout
+
+\begin_layout LyX-Code
+//type 't option
+\end_layout
+
+\begin_layout LyX-Code
+return x = Some(x)
+\end_layout
+
+\begin_layout LyX-Code
+bind //аналогично первому примеру
+\end_layout
+
+\begin_layout Standard
+Монады должна удовлетворять свойствам:
+\end_layout
+
+\begin_layout LyX-Code
+return x >>= f 
+\begin_inset Formula $\equiv$
+\end_inset
+
+ f x
+\end_layout
+
+\begin_layout LyX-Code
+m >>= return 
+\begin_inset Formula $\equiv$
+\end_inset
+
+ m
+\end_layout
+
+\begin_layout LyX-Code
+(m >>= f) >>=g 
+\begin_inset Formula $\equiv$
+\end_inset
+
+ m >>= (
+\begin_inset Formula $\lambda$
+\end_inset
+
+x.fx -> g(x)) // ассоциативность выполнения операций
+\end_layout
+
+\begin_layout Standard
+Как спрятать это дело от пользователя в F#:
+\end_layout
+
+\begin_layout LyX-Code
+let r = nondet {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let! vasya = [14;15]
+\end_layout
+
+\begin_layout LyX-Code
+let! petya = [2*vasya; 3*vasya]
+\end_layout
+
+\begin_layout LyX-Code
+let lena  = petya + 1
+\end_layout
+
+\begin_layout LyX-Code
+return lena
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Весь bind запрятан в nondet (let' --- аналог ret')
+\end_layout
+
+\begin_layout LyX-Code
+type NonderBuilder() = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+number b.Return(x) = ret x
+\end_layout
+
+\begin_layout LyX-Code
+number b.ReturnFrom(x) = ret' x
+\end_layout
+
+\begin_layout LyX-Code
+number b.Bind(mA, f) = ma >>= f
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+let nondet = new NondetBuilder()
+\end_layout
+
+\begin_layout Standard
+Помимо return и bind, можно описывать другие свойства (можно определить
+ удаление списка)
+\end_layout
+
+\begin_layout LyX-Code
+let rec remove x l = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+nondet {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if l = [] then return []
+\end_layout
+
+\begin_layout LyX-Code
+else
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if (List.head l) = x then return (List)...
+ //нет else -> реализуется через zero
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+С помощью монад можно решать логические задачи (задача про льва и единорога:
+ можно перебрать все дни).
+ 
+\end_layout
+
+\begin_layout Itemize
+Надо получить тройку для вчерашнего дня
+\end_layout
+
+\begin_layout Itemize
+Проверить выражение на правдивость
+\end_layout
+
+\begin_layout Itemize
+Совершить решение:
+\end_layout
+
+\begin_layout LyX-Code
+nondet {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let (l,e,d) = data
+\end_layout
+
+\begin_layout LyX-Code
+let (l1, e1, d1) = prev (true, true, 
+\begin_inset Quotes eld
+\end_inset
+
+sun
+\begin_inset Quotes erd
+\end_inset
+
+) (fun(_,_,x) -> x = d) data
+\end_layout
+
+\begin_layout LyX-Code
+if (realday l false) = l1 && (realday e false) = e1 then return (l,e,d)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+} 
+\end_layout
+
+\begin_layout Standard
+По сути, мы решили задачу, которую можно решать в логической парадиме.
+\end_layout
+
+\begin_layout Standard
+Рассмотрим примеры классических монад:
+\end_layout
+
+\begin_layout Standard
+а) Монады ввода-вывода --- состояние ввода и вывода есть пара списков
+\end_layout
+
+\begin_layout LyX-Code
+type State = string list * string list
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+type IO <'t> = 't*State
+\end_layout
+
+\begin_layout LyX-Code
+let print(t:string) ((I,O):State) = (t, (I, t::O))
+\end_layout
+
+\begin_layout LyX-Code
+read ((I,O):state) // передвижение каретки
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+б) Монады состояния: пример --- проход по дереву (тупая реализация --- протаскив
+ать глобальную переменную).
+ С помощью state можно протащить все данные внутри:
+\end_layout
+
+\begin_layout LyX-Code
+State<'t> = 's -> 't * 's
+\end_layout
+
+\begin_layout LyX-Code
+return x = fun s -> x, s
+\end_layout
+
+\begin_layout LyX-Code
+let (>>=) x f = (fun s0 -> let a, s = x s0; f a s)
+\end_layout
+
+\begin_layout LyX-Code
+let getState = (fun s -> s, s)
+\end_layout
+
+\begin_layout LyX-Code
+let setState s = (fun _ -> (), s)
+\end_layout
+
+\begin_layout LyX-Code
+//do! - отбросить unit - setState пишется с do
+\end_layout
+
+\begin_layout Standard
+в) Вычисления с продолжениями (скинуть хвостовую рекурсию в дереве или определит
+ь порядок вычислений в ленивом языке) --- можно сказать, что не надо возвращатьс
+я
+\end_layout
+
+\begin_layout LyX-Code
+let (>>=) x f = x f
+\end_layout
+
+\begin_layout LyX-Code
+read >>= double >>= print >>= (fun x -> x)
+\end_layout
+
+\begin_layout Standard
+Быстрая сортировка с хвостовой рекурсией:
+\end_layout
+
+\begin_layout LyX-Code
+let qsort list = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let rec sort list cont = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+match list with
+\end_layout
+
+\begin_layout LyX-Code
+| [] -> cont []
+\end_layout
+
+\begin_layout LyX-Code
+| x::xs -> 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let l,r = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+List.partition ((>) x ) xs
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+sort l (fun ls -> sort r (fun rs -> cont(ls @ (x::rs))))
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+sort list (fun x -> x)
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Но выглядит это не очень красиво.
+ Надо прятать в монаду продолжения:
+\end_layout
+
+\begin_layout LyX-Code
+let qsort list = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let rec sort list =
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+cont {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+match list with
+\end_layout
+
+\begin_layout LyX-Code
+| [] -> return []
+\end_layout
+
+\begin_layout LyX-Code
+| x::xs -> 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let l,r = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+List.partition ((>) x ) xs
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+let! ls = sort l
+\end_layout
+
+\begin_layout LyX-Code
+let! rs = sort r
+\end_layout
+
+\begin_layout LyX-Code
+return ls @ (x::rs)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+sort list (fun x -> x)
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+По сути, нехвостовая рекурсия заменена по внешнему виду на хвостовую, но
+ с протаскиванием монады.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Рассмотрим монадические парсеры.
+\end_layout
+
+\begin_layout Standard
+Как решаются задачи разбора текста:
+\end_layout
+
+\begin_layout Itemize
+По тексту строится синтаксическое дерево
+\end_layout
+
+\begin_layout Itemize
+Правила задаются с помощью грамматики
+\end_layout
+
+\begin_layout Itemize
+Возможные подходы:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Лексический анализатор -> синтаксический анализатор
+\end_layout
+
+\begin_layout Itemize
+Руками
+\end_layout
+
+\begin_layout Itemize
+Монадический парсер (складываются из кусков - fparsec)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+let pair = parse {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let! _ = str_ws 
+\begin_inset Quotes eld
+\end_inset
+
+(
+\begin_inset Quotes eld
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+let! n1 = int_ws
+\end_layout
+
+\begin_layout LyX-Code
+let! _ = str_ws 
+\begin_inset Quotes eld
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+let str_ws str = parse {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+do! skipString str
+\end_layout
+
+\begin_layout LyX-Code
+do! spaces
+\end_layout
+
+\begin_layout LyX-Code
+return ()
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+let int_ws = parse {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+...
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Subsection
+Параллельные и асинхронные вычисления
+\end_layout
+
+\begin_layout Standard
+В функциональных языках можно вычислять что-то параллельно удобным образом.
+ Но, в целом, средства из коробки реализовать сложно (в Haskell, к примеру).
+\end_layout
+
+\begin_layout Standard
+Можно параллелить вручную: ставить Semaphore, Locks, etc.
+ Есть расширения из .NET.
+\end_layout
+
+\begin_layout Standard
+Основные проблемы асинхронных и параллельных вычислений:
+\end_layout
+
+\begin_layout Itemize
+Общая память (решается легко в функциональных языках)
+\end_layout
+
+\begin_layout Itemize
+Инверсия управления (надо вызывать функцию в функцией и т.д.)
+\end_layout
+
+\begin_layout Standard
+В F# есть Asynchronous Workflows:
+\end_layout
+
+\begin_layout LyX-Code
+let task1 = async {return 10 + 10}
+\end_layout
+
+\begin_layout LyX-Code
+let task2 = async {return 20 + 20}
+\end_layout
+
+\begin_layout LyX-Code
+Async.RunSynchronously {Asyc.Parallel [task1; task2]}
+\end_layout
+
+\begin_layout LyX-Code
+let map' func items =
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let tasks = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+seq {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+for i in items -> async { return (func i) }
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+Async.RunSynchronously (Async.Parallel tasks)
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+В обычных языках код плохой: создавать каждый раз поток.
+ Но в F# есть планировщик потоков, который не создает новые потоки, а раздает
+ потокам задания.
+\end_layout
+
+\begin_layout Standard
+Асинхронность вкладывается в данный контекст:
+\end_layout
+
+\begin_layout LyX-Code
+let httpAsync(url:string) =
+\end_layout
+
+\begin_layout LyX-Code
+async {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let req = WebRequest.Create(url)
+\end_layout
+
+\begin_layout LyX-Code
+let! resp = req.AsyncGetResponse()
+\end_layout
+
+\begin_layout LyX-Code
+use stream = resp.GetResponseStream()
+\end_layout
+
+\begin_layout LyX-Code
+use reader = new StreamReader(stream)
+\end_layout
+
+\begin_layout LyX-Code
+let! text = Async.SwaitTask(reader.ReadToEndAsync())
+\end_layout
+
+\begin_layout LyX-Code
+return text
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Async имеет монадический синтаксис (хороший синтаксис продолжения).
+ Реализация будет короче и проще, чем в C#.
+ Таким образом, решена проблема инверсии.
+\end_layout
+
+\begin_layout Standard
+Асинхронное чтение с диска:
+\end_layout
+
+\begin_layout LyX-Code
+let Readfile fn 
+\end_layout
+
+\begin_layout LyX-Code
+let goodfiles
+\end_layout
+
+\begin_layout LyX-Code
+let goodsplit
+\end_layout
+
+\begin_layout LyX-Code
+let wc s = s |> goodsplit |> Seq.filter(fun s -> s.Length > 0) |> Seq.length
+ 
+\end_layout
+
+\begin_layout LyX-Code
+goodfiles |> Seq.map (fun f -> (f, wc f)) |> Seq.toArray
+\end_layout
+
+\begin_layout LyX-Code
+let ReadfileAsync fn //заменить read на asyncRead
+\end_layout
+
+\begin_layout LyX-Code
+goodfiles 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+|> Seq.map (fun f -> async {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let! s = ReadFileAsync f
+\end_layout
+
+\begin_layout LyX-Code
+return (f, wc s)
+\end_layout
+
+\begin_layout LyX-Code
+})
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+|> Async.Parallel
+\end_layout
+
+\begin_layout LyX-Code
+|> Async.RunSyncronously
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Программа проработала очень быстро.
+\end_layout
+
+\begin_layout Standard
+Проблема: задачи распараллеливаются, если уже есть массив данных.
+ Но в реальной жизни бывает не так: есть сложная система, возникает проблема
+ масштабирования.
+ Можно использовать паттерн Agent.
+\end_layout
+
+\begin_layout LyX-Code
+let rec agent = MailboxProcessor.Start(fun inbox ->
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let rec loop() = async {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let! msg = ...
+\end_layout
+
+\begin_layout LyX-Code
+return! loop()
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+loop()
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+)
+\end_layout
+
+\begin_layout Standard
+Как написать Crawl?
+\end_layout
+
+\begin_layout LyX-Code
+let GetLinks s = 
+\end_layout
+
+\begin_layout LyX-Code
+let Crawl url = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+async {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let! s = httpAsync url
+\end_layout
+
+\begin_layout LyX-Code
+return GetLinks s
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+let CrawlAgent = MailboxProcessor.Start(fun inbox ->
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let rec loop() = sync {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let! msg = inbox.Receive()
+\end_layout
+
+\begin_layout LyX-Code
+let! res = Crawl msg
+\end_layout
+
+\begin_layout LyX-Code
+res |> Seq.iter (fun x -> CrawlerAgent.Post x)
+\end_layout
+
+\begin_layout LyX-Code
+return! loop()
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+loop()
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+)
+\end_layout
+
+\begin_layout LyX-Code
+let Dispatcher n f = // параллельный планировщик агентов, который обрабатывает
+ пул сообщений
+\end_layout
+
+\begin_layout Standard
+Таким образом, монады дают прекрасный способ описывать параллельные вычисления.
+\end_layout
+
+\begin_layout Exercise
+Написать частотный словарь Рунета (можно красиво написать на основе реактивного
+ программирования).
+\end_layout
+
+\begin_layout Standard
+Иногда можно вычислять параллельные задачи на облаке (кластерах).
+ Есть проект {m}brace, который помогает рассмотреть данный вопрос.
+ Для этого есть монада cloud.
+ На кластере есть специальный подход к вычислениям, который воспринимается
+ им при помощи программы.
+ (m-brace.net, briskengine.com).
+ Такой кластер можно развернуть на Microsoft Azure.
+\end_layout
+
+\begin_layout Standard
+Можно это сделать другим образом (при помощи CloudFlow).
+ Здесь использована идея Map-Reduce, которая хорошо используется на облачных
+ серверах.
+ 
+\end_layout
+
+\begin_layout Standard
+Внутренние переменные внутри cloud автоматически загружаются в облако (чеерз
+ cloudFlow можно загрузить все вручную).
+\end_layout
+
+\begin_layout Section
+Реактивное функциональное программирование
+\end_layout
+
+\begin_layout Standard
+В прошлом разделе мы написали Crawl, который индексирует веб-сайты.
+ В нем использовался паттерн Agent.
+ Как измерить доброту Интернета? Не очень красивое решение: можно запилить
+ функцию (но функцию надо будет менять).
+ 
+\end_layout
+
+\begin_layout Standard
+Есть некоторые механизмы обработки:
+\end_layout
+
+\begin_layout Itemize
+списки; (обработка в памти)
+\end_layout
+
+\begin_layout Itemize
+последовательности; (применять вытаскивание следующего элемента)
+\end_layout
+
+\begin_layout Itemize
+потоки; (вызов функциии на каждом элементе)
+\end_layout
+
+\begin_layout LyX-Code
+type Stream<'T> = ('T -> unit) -> unit
+\end_layout
+
+\begin_layout Standard
+По сути, данные передаются в поток, а затем применяются функции (причем
+ про input мы не знаем информации).
+\end_layout
+
+\begin_layout Standard
+Поэтому хочется, чтобы Crawler возвращал поток.
+\end_layout
+
+\begin_layout Standard
+Реактивное программирование --- парадигма, ориентированнная на потоки данных
+ и распространение изменений, типичный пример --- таблицы в Excel.
+ Reactive Manifesto --- реактивный стиль в классических языках программирования.
+\end_layout
+
+\begin_layout Standard
+Реактивное функциональное программирование бывает дискретным и непрерывным.
+\end_layout
+
+\begin_layout LyX-Code
+type Crawler() = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let evt = new Event<_>()
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+evt.Trigger --- отправляет события
+\end_layout
+
+\begin_layout LyX-Code
+evt.Publish --- подписка (несколько получателей на одно событие).
+\end_layout
+
+\begin_layout Standard
+Доброта Твиттера: создаем event, далее создаем listener, который получает
+ данные в виде JSON (работа с которым хороша с помощью NewtonSoft.JSON).
+ В данном случае в FSharpChart дается на вход Event, и она отображается
+ в виде FSharpChart.FastLine
+\end_layout
+
+\begin_layout Standard
+Еще одним примером является естественный контроль движений руки (при помощи
+ Kinect).
+ На каждом шаге передаем фрейм с устройства и контроллер, можно посчитать
+ скорость пальцев или тренажер пальцев при помощи функции Event.Scan (аккумулиров
+ать максимум).
+ Еще можно посмотреть при помощи контроллера на 5 фреймов назад и проверять
+ движения руки на жесты.
+\end_layout
+
+\begin_layout Standard
+При помощи Kinect можно получать результаты разных упражнений.
+\end_layout
+
+\begin_layout Standard
+Еще можно использовать реактивное программирование на облаке (каждый кластер
+ обрабатывает данные, а затем их отдает на узел, который складывается в
+ очередь и обрабатывается).
+\end_layout
+
+\begin_layout Standard
+Event --- самый простой вид обработки, но что делать, если возникают ошибки?
+ В .NET есть Reactive Extensions: 
+\end_layout
+
+\begin_layout LyX-Code
+IOObserver<T>(OnNext, OnError), IOObservable<T>
+\end_layout
+
+\begin_layout Standard
+Как можно программировать робота? Сенсоры предоставляют Observable объекты:
+\end_layout
+
+\begin_layout LyX-Code
+//init models
+\end_layout
+
+\begin_layout LyX-Code
+let power =  sensor.ToObservable().Select(dist).DistinctUntilChanged()
+\end_layout
+
+\begin_layout LyX-Code
+use l = power.Subscribe(motorL)
+\end_layout
+
+\begin_layout LyX-Code
+use r = power.Subscribe(motorR)
+\end_layout
+
+\begin_layout Standard
+На робот можно посылать данные с мобильных устройств (логика на клиенте,
+ на роботе --- простая работа): подписываем первую координату на один мотор,
+ вторую --- на другой мотор.
+ Создается TrikPad, который позволяет по наклону руки получает данные, которые
+ надо послать на робота.
+\end_layout
+
+\begin_layout Standard
+В итоге, реактивное программирование является хорошим способом создания
+ надежных систем регаирования в реальном времени.
+ Еще реактивный подход позволяет работать с потоками событий с использованием
+ привычных примитивов.
+\end_layout
+
+\begin_layout Standard
+Хорошим примером является обработка событий с мышки в пользовательском интерфейс
+е, а еще есть хорошее применение в real-time анализе котировок.
+\end_layout
+
+\begin_layout Section
+Реализация функциональных языков программрования
+\end_layout
+
+\begin_layout Standard
+Рассмотрим возможные реализации функциональных языков программирования.
+\end_layout
+
+\begin_layout Standard
+Функциональный язык представляет расширенный функционал относительно 
+\begin_inset Formula $\lambda$
+\end_inset
+
+-исчисления.
+ А здесь есть различия:
+\end_layout
+
+\begin_layout Itemize
+Прямая интерпретация (хороша для энергичных языков и если не гонимся за
+ производительностью языков)
+\end_layout
+
+\begin_layout Itemize
+Редукция графов (изначально есть дерево, а далее идет редукция до необходимого
+ состояния, иногда доходит до графов)
+\end_layout
+
+\begin_layout Itemize
+Использование комбинаторов --- комбинаторная редукция
+\end_layout
+
+\begin_layout Itemize
+Код абстрактной машины --- на их основе можно построить интерпретатор абстрактно
+й машины (примеры SECD, .NET и т.п.)
+\end_layout
+
+\begin_layout LyX-Code
+type Expr = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+| App of Expr*Expr
+\end_layout
+
+\begin_layout LyX-Code
+| Lam of string*Expr
+\end_layout
+
+\begin_layout LyX-Code
+| Var of string
+\end_layout
+
+\begin_layout LyX-Code
+| Cons of string
+\end_layout
+
+\begin_layout LyX-Code
+| Clo of string*Expr*Env //лямбда с захваченным окружением
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+and Env = Map<string, Expr>
+\end_layout
+
+\begin_layout LyX-Code
+let text = App(App(Lam(
+\begin_inset Quotes eld
+\end_inset
+
+f
+\begin_inset Quotes erd
+\end_inset
+
+, Lam(
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+, App(var...)))))
+\end_layout
+
+\begin_layout LyX-Code
+let rec eval env expr = 
+\end_layout
+
+\begin_layout LyX-Code
+match expr with 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+| App(e1, e2) ->
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let f1 = eval env e1
+\end_layout
+
+\begin_layout LyX-Code
+let f2 = eval env e2
+\end_layout
+
+\begin_layout LyX-Code
+match f1 with
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+| Clo(x, ex, env') -> eval(Map.add x f2 env') ex // добавление в окружение
+\end_layout
+
+\begin_layout LyX-Code
+| Cons(x) -> App(Cons(x), f2)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+| Var(x) -> Map.find x env
+\end_layout
+
+\begin_layout LyX-Code
+| Cons(x) -> Cons(x)
+\end_layout
+
+\begin_layout LyX-Code
+| Lam(x, e) -> Clo(x, e, env)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+eval Map.empty text
+\end_layout
+
+\begin_layout Standard
+В Lisp интерпретатор состоит из eval и apply:
+\end_layout
+
+\begin_layout LyX-Code
+| Let of id*expr*expr
+\end_layout
+
+\begin_layout LyX-Code
+| Pfunc of id // примитивная функция
+\end_layout
+
+\begin_layout LyX-Code
+| Op of id*int*expr list // отложенные операции, int --- число нехватаемых
+ выражений
+\end_layout
+
+\begin_layout Standard
+Eval:
+\end_layout
+
+\begin_layout LyX-Code
+let rec eval exp env = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+match exp with
+\end_layout
+
+\begin_layout LyX-Code
+| App(e1, e2) -> apply (eval e1 env) (eval e2 env)
+\end_layout
+
+\begin_layout LyX-Code
+| Int(n) -> Int(n)
+\end_layout
+
+\begin_layout LyX-Code
+| Var(x) -> Map.find x env
+\end_layout
+
+\begin_layout LyX-Code
+| PGunc(f) -> Op(f, arity f, [])
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+let apply e1 e2 = 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+match e1 with
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+| Closure(Lam(v, e), env) -> eval e (Map.add v e2 env)
+\end_layout
+
+\begin_layout LyX-Code
+| Op(id, n, args) ->
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if n = 1 then (funof id)(args@[e2])
+\end_layout
+
+\begin_layout LyX-Code
+else Op(id, n01, args@[e2])
+\end_layout
+
+\end_deeper
+\end_deeper
+\end_deeper
+\begin_layout Standard
+Таким образом был устроен интерпретатор Lisp.
+\end_layout
+
+\begin_layout Standard
+Возникает вопрос: как работать с рекурсией?
+\end_layout
+
+\begin_layout LyX-Code
+letrec fact = 
+\end_layout
+
+\begin_layout LyX-Code
+fun x -> 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+if x <= 1 then 1
+\end_layout
+
+\begin_layout LyX-Code
+else x*fact(x-1)
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+in fact 4
+\end_layout
+
+\begin_layout Standard
+Есть другой комбинатор неподвижной точки для энергичных вычислений, но он
+ огромный.
+ Нам надо, чтобы в правой части вместо fact подставилось определение этой
+ функции.
+ Надо придумать let, который подставляет окружение функции (нужно добавить
+ рекурсивное замыкание).
+\end_layout
+
+\begin_layout LyX-Code
+eval ...
+\end_layout
+
+\begin_layout LyX-Code
+| LetRec(id, e1, e2) -> eval e2 (Map.add id (RClosure(e1, env, id)) env)
+\end_layout
+
+\begin_layout LyX-Code
+apply ...
+\end_layout
+
+\begin_layout LyX-Code
+| RClosure(Lam(v, e), env, id) -> eval e (Map.add v e2 (Map.add id e1, env))
+ // закрутка выражений?
+\end_layout
+
+\begin_layout Standard
+Как оказывается, letrec не тоже самое, что и let.
+ 
+\end_layout
+
+\begin_layout Standard
+Как добавить ленивые вычисления? Сначала вычисляем 
+\begin_inset Formula $f$
+\end_inset
+
+, а вычисление 
+\begin_inset Formula $x$
+\end_inset
+
+ откладываем.
+ Для откладывания вводится операция Susp:
+\end_layout
+
+\begin_layout LyX-Code
+|App(e1, e2) -> apply(eval e1 env) (Susp(e2, env))
+\end_layout
+
+\begin_layout LyX-Code
+...
+ some changes with primitive functions
+\end_layout
+
+\begin_layout Standard
+Перейдем к рассмотрению реализации при помощи абстрактных машин.
+ Прямая интепретация дерева не очень эффективна (долгий обход по дереву).
+ Поэтому надо эффективно обходить дерево.
+ Классическим примером является язык SECD:
+\end_layout
+
+\begin_layout Itemize
+S - Stack -- стек объектов для вычисления выражений
+\end_layout
+
+\begin_layout Itemize
+E - Environment -- среда для означивания переменных, контекст
+\end_layout
+
+\begin_layout Itemize
+C - Сontrol -- управляющая строка, оставшаяся часть вычисляемого выражения
+\end_layout
+
+\begin_layout Itemize
+D - Dump -- стек возвратов для обработки вложенных контекстов (вызовы функций).
+\end_layout
+
+\begin_layout Standard
+Все абстрактные машины являются стековыми, о количестве аргументов заботиться
+ не надо на этапе свертке (очень схоже с алгоритмом прохода-свертки и LR-граммат
+ики).
+\end_layout
+
+\begin_layout Standard
+Данные операции выполняются аналогично eval-apply подходу, но оперируем
+ более простыми выражениями и идем итерационными методами.
+\end_layout
+
+\begin_layout Standard
+Аналогично предыдущим реализациям можно рассмотреть остальные случаи (рекурсия,
+ условия и т.п.).
+\end_layout
+
+\begin_layout Standard
+Рассмотрим редукцию графов.
+ Как устроены правила редукции: ищется самый низкий уровень лямбды, далее
+ смотрим на переменную, а затем меняем ссылки в правой части.
+\end_layout
+
+\begin_layout Note
+The implementation of Functional Programming Languages, 1987
+\end_layout
+
+\begin_layout Standard
+Реализация на потоковых графах: создается взаимодействие функций в виде
+ комбинируемых потоков из схемы функциональных элементов.
+\end_layout
+
+\begin_layout Standard
+Мы не рассмотрели комбинаторную редукцию графов и реализацию на комбинаторной
+ логике.
+\end_layout
+
+\begin_layout Standard
+Как можно реализовать грамматику: происходит лексический анализ, а далее
+ по ним строится синтаксический анализ (к примеру, методом рекурсивного
+ спуска).
+ Но так делать плохо.
+\end_layout
+
+\begin_layout Standard
+Поэтому есть fslex и fsyacc -- инструменты для построения всего этого дела,
+ аналогично yacc и lex.
+ В lex строятся токены, а в yacc строится грамматика.
+\end_layout
+
+\begin_layout Standard
+Такой подход не очень удобен (ибо код генерируется плохой).
+\end_layout
+
+\begin_layout Remark
+Разве? (Зам.
+ автора)
+\end_layout
+
+\begin_layout Remark
+В F# есть комбинаторный парсер FParsec
+\end_layout
+
+\begin_layout LyX-Code
+let str s = pstring s
+\end_layout
+
+\begin_layout LyX-Code
+let float_in_brackets = str 
+\begin_inset Quotes eld
+\end_inset
+
+(
+\begin_inset Quotes eld
+\end_inset
+
+ >>.
+ pfloat .>> str 
+\begin_inset Quotes eld
+\end_inset
+
+)
+\begin_inset Quotes erd
+\end_inset
+
+ // >>.
+ -- return right, .>> -- return left, .>>.
+ -- pair
+\end_layout
+
+\begin_layout LyX-Code
+let floats = sepBy pfloat(str 
+\begin_inset Quotes eld
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+let pexpr , pexpr_ref = createParserForwarderToRef()
+\end_layout
+
+\begin_layout LyX-Code
+let str' s = str s .>> ws
+\end_layout
+
+\begin_layout LyX-Code
+let ident = indetifier (new IdentifierOptions()) .>> ws
+\end_layout
+
+\begin_layout LyX-Code
+let pid = ident |>> Var
+\end_layout
+
+\begin_layout LyX-Code
+let plet = pipe (str' 
+\begin_inset Quotes eld
+\end_inset
+
+let
+\begin_inset Quotes erd
+\end_inset
+
+) ident (str 
+\begin_inset Quotes erd
+\end_inset
+
+=
+\begin_inset Quotes erd
+\end_inset
+
+)...
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+do pexpr_ref := choice [pid; plet; pint32 |>> Int; plam; papp; pfunc]
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\end_body
+\end_document
