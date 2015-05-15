@@ -3747,5 +3747,699 @@ mutexA.lock()
 Объединить всесозможные блокировки в один класс и выстраивать их иерархию.
 \end_layout
 
+\begin_layout Section
+\begin_inset Formula $\mathsection40$
+\end_inset
+
+.
+ Атомарные типы
+\end_layout
+
+\begin_layout Standard
+В прошлом параграфе была проблема с неатомарностью метода pop() в стеке.
+ Поэтому воспользуемся atomic типами.
+ В STL C++ 11 они представлены в виде std::atomic
+\end_layout
+
+\begin_layout LyX-Code
+template<class T>
+\end_layout
+
+\begin_layout LyX-Code
+std::atomic<T>
+\end_layout
+
+\begin_layout LyX-Code
+//some methods
+\end_layout
+
+\begin_layout Standard
+Для пользовательских типов определены следующие методы: operator =, is_lock_free
+(), store(), load(), operator T, exchange, compare_exchange.
+ А для примитивных типов есть методы fetch_add, fetch_sub, fetch_add(for
+ booleans with and), fetch_or, fetch_xor.
+ В WinAPI есть аналогичные interlocked функции: _InterlockedIncrement, _Interloc
+kedDecrement, ....
+ (работают с shared_ptr).
+\end_layout
+
+\begin_layout Standard
+К примеру, 
+\end_layout
+
+\begin_layout LyX-Code
+if(_InterlockedDecrement(refCount) == 0) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+delete object;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Здесь операция декремента работает корректно с shared_ptr.
+\end_layout
+
+\begin_layout Standard
+_InterlockedBittestandSet используется в spin-блокировках:
+\end_layout
+
+\begin_layout LyX-Code
+while(_interlockedBittestandSet(flag, false, true)) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+//doSmth
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}из
+\end_layout
+
+\begin_layout LyX-Code
+//unlock
+\end_layout
+
+\begin_layout LyX-Code
+_InterlockedExchange(flag, false);
+\end_layout
+
+\begin_layout Standard
+На очень быстрых действиях лучше использовать interlock-функции, потому
+ что не происходит связи с mutex, поэтому работает быстрее.
+ std::atomic в Windows реализован при помощи спин-блокировок.
+ С помощью _InterlockedCachedCompareExchange можно реализовать любые арифметичес
+кие операции.
+\end_layout
+
+\begin_layout Section
+\begin_inset Formula $\mathsection41$
+\end_inset
+
+.
+ Спецификации мютексов
+\end_layout
+
+\begin_layout Standard
+Как было видно, std::mutex не может просто взять и по призыву приостановить
+ действие lock-а.
+ Поэтому для этого используется std::timed_mutex:
+\end_layout
+
+\begin_layout LyX-Code
+class std::timed_mutex {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+lock();
+\end_layout
+
+\begin_layout LyX-Code
+bool try_lock();
+\end_layout
+
+\begin_layout LyX-Code
+t<> bool try_lock_for(const chrono::duration<...>& duration); //lock for this
+ time
+\end_layout
+
+\begin_layout LyX-Code
+t<> bool try_lock_until(const chrono::point_of_time<...>& p); 
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Иногда надо делать так, чтобы при попытке записи происходила блокировка.
+ Для этого используется shared mutex.
+ Что хотят добавить в стандарт C++: 
+\end_layout
+
+\begin_layout LyX-Code
+std::shared_timed_mutex {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+lock
+\end_layout
+
+\begin_layout LyX-Code
+try_хи
+\end_layout
+
+\begin_layout LyX-Code
+try_lock_for
+\end_layout
+
+\begin_layout LyX-Code
+try_lock_until
+\end_layout
+
+\begin_layout LyX-Code
+//shared-block
+\end_layout
+
+\begin_layout LyX-Code
+lock_shared()
+\end_layout
+
+\begin_layout LyX-Code
+try_lock_shared
+\end_layout
+
+\begin_layout LyX-Code
+..._for
+\end_layout
+
+\begin_layout LyX-Code
+..._until
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+В реализации используются семафоры при помощи event-ов.
+\end_layout
+
+\begin_layout Example
+DNS-cache
+\end_layout
+
+\begin_layout LyX-Code
+class DNSCache {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::map<std::string, dns_entry> entries;
+\end_layout
+
+\begin_layout LyX-Code
+mutable boost::shared_mutex m;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+public:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+dns_entry find(const std::string& domain) const {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+boost::shared_lock<boost::shared_mutex> lock(m) // analogue of shared guard
+\end_layout
+
+\begin_layout LyX-Code
+auto it = entries.find(domain);
+\end_layout
+
+\begin_layout LyX-Code
+return (it == entries.end()) ? dns_entry() : it->second;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+void update_entry(const std::string& domain, const dns_entry& d) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::lock_guard<boost::shared_mutex> g(m);
+\end_layout
+
+\begin_layout LyX-Code
+entries[domain] = d;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Предоставим еще один способ работы с блокировками заключается в том, что
+ все синхронизационные объекты получает свою иерархию (присваивается уровень
+ иерархии для каждого mutex при помощи топологической сортировки).
+ Но надо гарантировать во время выполнения, что никакой mutex c меньшим
+ уровнем не заблокируется перед исходным lock-ом.
+ Поэтому надо написать иерархический класс, который будет контролировать
+ это дело:
+\end_layout
+
+\begin_layout LyX-Code
+class HierarchicalMutex {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::mutex;
+\end_layout
+
+\begin_layout LyX-Code
+static thread_local<int> current_thread_level = MAX_INT;
+\end_layout
+
+\begin_layout LyX-Code
+const int mutex_level;
+\end_layout
+
+\begin_layout LyX-Code
+//lock состоит из 3 частей:
+\end_layout
+
+\begin_layout LyX-Code
+// 1: проверка того, что mutex_level < current_thread_level);
+\end_layout
+
+\begin_layout LyX-Code
+// 2: m.lock();
+\end_layout
+
+\begin_layout LyX-Code
+// 3: prev_level = current_thread_level;
+\end_layout
+
+\begin_layout LyX-Code
+// 4: current_thread_level = mutex_level;
+\end_layout
+
+\begin_layout LyX-Code
+//
+\end_layout
+
+\begin_layout LyX-Code
+// unlock, разблокировка происходит по транзитивному замыканию
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Операционная система представляет API для работы с общим хранением потоков
+ (причем их число ограничено, порядка 1000).
+ Есть некоторые методы, которыми можно пользоваться: TLSAlloc, TLSFree,
+ TLSSetValue, TLSGetValue(index, data) --- WinAPI, и thread_local в STL
+ C++11.
+\end_layout
+
+\begin_layout Section
+Events
+\end_layout
+
+\begin_layout Standard
+Рассмотрим механизм обработки событий.
+ Как это делать при помощи mutex-ов:
+\end_layout
+
+\begin_layout LyX-Code
+bool flag;
+\end_layout
+
+\begin_layout LyX-Code
+std::mutex m;
+\end_layout
+
+\begin_layout LyX-Code
+void wait_for_flag() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::unique_lock<std::mutex> l(m);
+\end_layout
+
+\begin_layout LyX-Code
+while (!flag) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+l.unlock();
+\end_layout
+
+\begin_layout LyX-Code
+std::this_thread::sleep_for(std::chrono::multiseconds(100));
+\end_layout
+
+\begin_layout LyX-Code
+l.lock();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+В данном случае проходят очень много времени.
+ Есть в Windows самосбрасывающиеся и несамосбрасывающиеся события.
+\end_layout
+
+\begin_layout LyX-Code
+#include <condition_variable>
+\end_layout
+
+\begin_layout LyX-Code
+std::mutex m;
+\end_layout
+
+\begin_layout LyX-Code
+std::queue<data_chunk> data_queue;
+\end_layout
+
+\begin_layout LyX-Code
+std::condition_variable data_cond;
+\end_layout
+
+\begin_layout LyX-Code
+void data_preparation_thread() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+while(hasData()) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+const data_chuk data = prepare();
+\end_layout
+
+\begin_layout LyX-Code
+std::lock_guard<std::mutex> l(m);
+\end_layout
+
+\begin_layout LyX-Code
+data_queue.push(data);
+\end_layout
+
+\begin_layout LyX-Code
+data_cond.notify_one();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+void data_processing_thread() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+while (true) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::unique_lock<mutex> l(m);
+\end_layout
+
+\begin_layout LyX-Code
+data_cond.wait(l, []{return !data_queue.empty()});
+\end_layout
+
+\begin_layout LyX-Code
+data_chunk data = data_queue.foront();
+\end_layout
+
+\begin_layout LyX-Code
+data_queue.pop();
+\end_layout
+
+\begin_layout LyX-Code
+l.unlock();
+\end_layout
+
+\begin_layout LyX-Code
+process(data);
+\end_layout
+
+\begin_layout LyX-Code
+if (is_last_chunk(data)) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+return;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+При этом все хорошо, ибо notify_one предупреждаем ровно один объект и извлекаем
+ ровно один объект.
+ Если использовать notifyAll, то проснутся все потоки, и информация только
+ достанет один элемент, а остальные не получат данные, и тогда информация
+ будет получать false на wait, в итоге получится бесконечный цикл на блокировке.
+ Notify_all полезно слать тогда, когда надо завершить приложений.
+\end_layout
+
+\begin_layout Standard
+Напишем обработчик заданий, который не зависит от методов синхронизации:
+\end_layout
+
+\begin_layout LyX-Code
+#include <mutex>
+\end_layout
+
+\begin_layout LyX-Code
+#include <condition_variable>
+\end_layout
+
+\begin_layout LyX-Code
+#include <memory>
+\end_layout
+
+\begin_layout LyX-Code
+template <class T>
+\end_layout
+
+\begin_layout LyX-Code
+class ThreadSafeQueue {
+\end_layout
+
+\begin_layout LyX-Code
+public:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+ThreadSafeQueue();
+\end_layout
+
+\begin_layout LyX-Code
+void push(T value);
+\end_layout
+
+\begin_layout LyX-Code
+bool try_pop(T& value);
+\end_layout
+
+\begin_layout LyX-Code
+shared_ptr<T> try_pop();
+\end_layout
+
+\begin_layout LyX-Code
+void wait_and_pop(T& value);
+\end_layout
+
+\begin_layout LyX-Code
+shared_ptr<T> wait_and_pop();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+private:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::mutex m;
+\end_layout
+
+\begin_layout LyX-Code
+std::queue<T> data_queue;
+\end_layout
+
+\begin_layout LyX-Code
+std::condition_variable data_cond;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+template<class T>
+\end_layout
+
+\begin_layout LyX-Code
+void ThreadSafeQueue::push(T newValue) {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::lock_guard<...> l(m);
+\end_layout
+
+\begin_layout LyX-Code
+data_queue.push(newValue);
+\end_layout
+
+\begin_layout LyX-Code
+data_cond.notify_one();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+template<class T>
+\end_layout
+
+\begin_layout LyX-Code
+shared_ptr<T> ThreadSafeQueue::wait_and_pop() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::unique_lock<...> l(m);
+\end_layout
+
+\begin_layout LyX-Code
+data_cond.wait(l, [this] {return !data.push.empty();]});
+\end_layout
+
+\begin_layout LyX-Code
+std::shared_ptr<T> result = std::make_shared(data_queue.front());
+\end_layout
+
+\begin_layout LyX-Code
+data_queue.pop();
+\end_layout
+
+\begin_layout LyX-Code
+return res;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Теперь хотим получить результат выполнения задания, ибо у нас есть объект
+ для отправки заданий.
+ Можно аналогично завести очередь результатов, но тогда нам надо будет ждать
+ либо всегда, либо периодически.
+ Поэтому будем использовать future.
+\end_layout
+
+\begin_layout LyX-Code
+#include <future>
+\end_layout
+
+\begin_layout LyX-Code
+std::future <T>
+\end_layout
+
+\begin_layout LyX-Code
+std::shared_future <T>
+\end_layout
+
+\begin_layout LyX-Code
+int find_answer(params...);
+\end_layout
+
+\begin_layout LyX-Code
+int main() {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+std::future<int> answer = std::async(find_answer,params...);
+\end_layout
+
+\begin_layout LyX-Code
+//...
+\end_layout
+
+\begin_layout LyX-Code
+std::cout << answer.get();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Standard
+Если первый параметр --- это функция, то тогда второй, третий аргументы
+ и т.д.
+ --- параметры функции.
+ Если первый параметр --- std::launch, то тогда далее передается либо std::launc
+h_deffered -- выполнение на текущем потоке или std::launch::async -- на
+ отдельном потоке.
+ По default --- то тогда отдается уже приоритет реализации.
+\end_layout
+
 \end_body
 \end_document
