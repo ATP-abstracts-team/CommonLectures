@@ -16,9 +16,9 @@ theorems-ams-extended-bytype
 theorems-sec-bytype
 \end_modules
 \maintain_unincluded_children false
-\language english
+\language russian
 \language_package default
-\inputencoding auto
+\inputencoding cp1251
 \fontencoding global
 \font_roman default
 \font_sans default
@@ -71,7 +71,7 @@ theorems-sec-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\quotes_language french
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -2497,8 +2497,113 @@ let
 do pexpr_ref := choice [pid; plet; pint32 |>> Int; plam; papp; pfunc]
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Section
+Теория категорий
+\end_layout
 
+\begin_layout Standard
+Функторы --- отображение из одной категории в другую, которое сохраняет
+ операции и морфизмы (в Haskell есть fmap).
+ Примеры функторов: option type, списки.
+ На самом деле, функторы в языке отображаются в себя (эндофункторы).
+\end_layout
+
+\begin_layout Standard
+Произведение категорий --- это объект 
+\begin_inset Formula $C$
+\end_inset
+
+, которая обладает функцией проекции, причем минимальное по включение.
+ Оказывается, что оно определяется с точностью до изоморфизма.
+ Аналогично можно ввести ко-произведение (прямая сумма множеств), оно по
+ сути, производит обратную задачу (в F# --- конструктор типов).
+\end_layout
+
+\begin_layout Standard
+На основе суммы и произведения строятся алгебраические типы данных.
+ К примеру, Void - 0, () - 1, a * b (a;b), option: 1 + a, 2 = Bool.
+ Для списков имеем уравнение 
+\begin_inset Formula $x=1+t\cdot x$
+\end_inset
+
+, тогда 
+\begin_inset Formula $x=1+t\cdot(1+t\cdot x)=\dots=\stackrel[i=0]{+\infty}{\sum}t^{i}$
+\end_inset
+
+.
+ Аналогичный анализ можно произвести для пар.
+\end_layout
+
+\begin_layout Standard
+Чтобы определить монады, надо определить моноид (в списках хорошо используется
+ для свертки, тогда ее можно разбивать на части).
+ Моноидальная категория --- это категория с одним элементом 
+\begin_inset Formula $A$
+\end_inset
+
+ (набор функций, которые бьют из одного типа другой).
+ Порождающая функция: 
+\begin_inset Formula $m\ x=\lambda y.x\circ y$
+\end_inset
+
+ (каждому элементу можно сопоставить функцию).
+ Как определяется функтор монады?
+\end_layout
+
+\begin_layout Standard
+Функтор 
+\begin_inset Formula $T(K)$
+\end_inset
+
+, снабженный функциями:
+\end_layout
+
+\begin_layout LyX-Code
+return: x 
+\begin_inset Formula $\mbox{\rightarrow}$
+\end_inset
+
+ T x
+\end_layout
+
+\begin_layout LyX-Code
+join: T T x 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+ T x
+\end_layout
+
+\begin_layout LyX-Code
+Свойства функтора:
+\end_layout
+
+\begin_layout LyX-Code
+return * f = fmap f * return
+\end_layout
+
+\begin_layout LyX-Code
+fmap f * join - join* (fmap * fmap) f
+\end_layout
+
+\begin_layout LyX-Code
+join * return = id
+\end_layout
+
+\begin_layout LyX-Code
+join * fmap return = id
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout Standard
+На базе теории категорий можно ввести интуиционистскую логику, числа, структурну
+ю рекурсию (любая рекурсивная функция представляется в виде композиций свёртки
+ и развёртки).
+ Возникает понятие изоморфизма Карри-Ховарда, которая связывает теорию алогоритм
+ов и теорию доказательств
 \end_layout
 
 \end_body
