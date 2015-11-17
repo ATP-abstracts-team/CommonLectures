@@ -1,0 +1,2510 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{citehack}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{indentfirst}
+\usepackage{cmap}
+\usepackage{tikz}
+\end_preamble
+\use_default_options true
+\begin_modules
+algorithm2e
+theorems-ams
+theorems-named
+theorems-ams-extended
+\end_modules
+\maintain_unincluded_children false
+\language russian
+\language_package default
+\inputencoding cp1251
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize a4paper
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine natbib
+\cite_engine_type authoryear
+\biblio_style plainnat
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Параллельные и распределенные вычисления
+\end_layout
+
+\begin_layout Author
+Akhtyamov Pavel
+\end_layout
+
+\begin_layout Part
+Параллельные вычисления
+\end_layout
+
+\begin_layout Section
+Характеристики параллельных программ
+\end_layout
+
+\begin_layout Standard
+Закон Амдала строится для ускорения 
+\begin_inset Formula $S(p)$
+\end_inset
+
+.
+ Есть части кода последовательные и параллельные.
+ Положим 
+\begin_inset Formula $1=\alpha+\beta$
+\end_inset
+
+, где 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ --- доля последовательной части кода, а 
+\begin_inset Formula $\beta$
+\end_inset
+
+ --- параллельной.
+ Как тогда можно посчитать ускорение: ранее была обозначена следующая формула
+ для ускорения: 
+\begin_inset Formula $S(n)=\frac{T(1)}{T(n)}=\frac{1}{\alpha+\frac{\beta}{n}}=\frac{1}{\alpha+\frac{1-\alpha}{n}}\ (1)$
+\end_inset
+
+.
+ Тогда какое максимальное ускорение можно получить в принципе? Действительно,
+ можно определить 
+\begin_inset Formula $\underset{n\rightarrow\infty}{\lim}\frac{1}{\alpha+\frac{1-\alpha}{n}}=\frac{1}{\alpha}$
+\end_inset
+
+.
+ К примеру, если 
+\begin_inset Formula $\alpha=\frac{1}{2}$
+\end_inset
+
+, то программу нельзя ускорить более, чем в два раза.
+\end_layout
+
+\begin_layout Corollary*
+Для того, чтобы получить ускорение, необходимо уменьшить временную долю
+ выполнения последовательной части.
+\end_layout
+
+\begin_layout Standard
+На самом деле, описанная выше модель является идеальной.
+ На самом деле, в реальных системах существуют накладные расходы.
+ Поэтому с учетом накладных расходов, формула 
+\begin_inset Formula $(1)$
+\end_inset
+
+ переписывается в следующем виде: 
+\begin_inset Formula $S(n)=\frac{1}{\alpha+\rho(n)+\frac{\beta}{n}}$
+\end_inset
+
+, причем параметр зависит от числа процессоров, входных данных.
+\end_layout
+
+\begin_layout Standard
+Накладные расходы уходят на:
+\end_layout
+
+\begin_layout Enumerate
+Порождение 
+\begin_inset Quotes eld
+\end_inset
+
+объектов
+\begin_inset Quotes erd
+\end_inset
+
+ (не зависит от объёма входных данных).
+\end_layout
+
+\begin_layout Enumerate
+Синхронизация (не зависит от объёма входных данных, явно не очевидна, ибо
+ зачастую выполняется засчёт пересылки данных) --- плохо при MPI_Barrier
+ на 10000 процессах.
+\end_layout
+
+\begin_layout Enumerate
+Барьерные эффекты (проблема вместимости в кеш, сверхлинейное ускорение,
+ к примерам) --- зависят от аппаратуры (есть в последовательном эффекте,
+ но они явно не выражаются, ибо выполняется код только на одной машине).
+\end_layout
+
+\begin_layout Enumerate
+Накладные расходы на передачу данных (наиболее сильно проявляется при передачи
+ данных по сети --- Interconnect, менее --- при передачи одного процессора
+ к другому).
+ К примеру, есть 
+\begin_inset Formula $t_{start}+dataSize\cdot(maxflow)$
+\end_inset
+
+, где 
+\begin_inset Formula $maxflow$
+\end_inset
+
+ --- максимальная пропускная способность.
+\end_layout
+
+\begin_layout Enumerate
+Накладные расходы на вход/выход.
+\end_layout
+
+\begin_layout Example*
+Предположим, что у нас есть некий массив длины 
+\begin_inset Formula $n$
+\end_inset
+
+, имеем процессоров в количестве 
+\begin_inset Formula $P$
+\end_inset
+
+ штук.
+ Мы хотим посчитать сумму чисел на массиве.
+ Положим за единицу времени --- время вычисления суммы, а за двойку ---
+ время передачи по сети четырех байт информации.
+ Посчитаем время, затраченное на подсчет суммы.
+\end_layout
+
+\begin_layout Standard
+Далее автор пошел считать :-)
+\end_layout
+
+\begin_layout Corollary*
+При передаче данных нет выигрыша вообще, если нет --- то ускорения на 3
+ процессорах будет достаточно, и, вообще, оптимальное ускорение в идеальной
+ модели при 
+\begin_inset Formula $n\rightarrow\infty$
+\end_inset
+
+ получается при количестве процессоров, равных 
+\begin_inset Formula $p\sim\sqrt{n}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Далее рассмотрим вопрос о зависимостях и связях между ними.
+ У нас есть код, в нем есть операторы и переменные (переменные могут меняться
+ операторами).
+ Обозначим через 
+\begin_inset Formula $s_{i}$
+\end_inset
+
+ --- 
+\begin_inset Formula $i$
+\end_inset
+
+-ый оператор языка.
+\end_layout
+
+\begin_layout LyX-Code
+int a,b;
+\end_layout
+
+\begin_layout LyX-Code
+a = 
+\end_layout
+
+\begin_layout LyX-Code
+1;
+\end_layout
+
+\begin_layout LyX-Code
+b = 10;
+\end_layout
+
+\begin_layout Standard
+Мы смотрим ход выполнения программы (то, что написано позже, может выполняться
+ раньше, к примеру, генерация конструкторов).
+ А можем ли мы поменять процесс выполнения операций для получения ускорения
+ работы программы? Обозначим 
+\begin_inset Formula $In$
+\end_inset
+
+ --- множество переменных, которые необходимы для данного оператора, а 
+\begin_inset Formula $Out$
+\end_inset
+
+ --- множество переменных, которое меняется после выполнения операции (обычно,
+ некоторого набора операции, но надо уточнять).
+ Говорят, что операторы находятся в зависимости, если они имеют непересекающийся
+ набор необходимых операторов.
+\end_layout
+
+\begin_layout Standard
+Заметим, что зависимоть 
+\begin_inset Formula $In$
+\end_inset
+
+-
+\begin_inset Formula $In$
+\end_inset
+
+ не накладывает никаких ограничений.
+ Зависимость 
+\begin_inset Formula $Out\rightarrow In$
+\end_inset
+
+ является истинной: данные операторы нельзя поменять местами.
+ Следующая зависимость 
+\begin_inset Formula $In\rightarrow Out$
+\end_inset
+
+, является очень странной.
+ Её иллюстрирует следующий пример:
+\end_layout
+
+\begin_layout LyX-Code
+b = 1;
+\end_layout
+
+\begin_layout LyX-Code
+a = b + 1;
+\end_layout
+
+\begin_layout LyX-Code
+c = b + 2;
+\end_layout
+
+\begin_layout LyX-Code
+b = 
+\begin_inset Formula $\emptyset$
+\end_inset
+
+;
+\end_layout
+
+\begin_layout Standard
+Говорят, что переменная 
+\begin_inset Formula $b$
+\end_inset
+
+ находится в антизависимости.
+ И при хорошем надлежании, от нее можно избавиться, но надо следить глобально
+ за кодом (замечание с лекции), ибо в данном примере после кода нам неважно
+ значение переменной 
+\begin_inset Formula $b$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Зависимость 
+\begin_inset Formula $Out\rightarrow Out$
+\end_inset
+
+ плоха в том случае, если мы не знаем, что происходило между этими операциями.
+\end_layout
+
+\begin_layout Standard
+Всеми зависимостями занимается компилятором.
+ Можно построить граф зависимостей по данным для операторов, на вершинах
+ записать время срабатывания оператора (
+\begin_inset Formula $\tau_{i}$
+\end_inset
+
+).
+ Тогда время выполнения графа --- длина наибольшей цепочки (критический
+ путь).
+ Хорошо использовать количество процессоров, равное ширине максимального
+ уровня.
+ Если есть транзитный путь и прямой путь в таком графе, то лучше удалить
+ прямой путь.
+ В суперскалярной архитектуре можно решить, куда направить вычисление для
+ вентилей.
+ 
+\end_layout
+
+\begin_layout Standard
+Какие есть проблемы:
+\end_layout
+
+\begin_layout Enumerate
+Наличие указателей --- мы не можем сказать, что происходит с памятью под
+ этими указателями.
+ Но компилятор может найти набор заклинаний и распознать их.
+ Иногда можно распознать параллелизм по наличию некоторых шаблонов для получения
+ информации.
+\end_layout
+
+\begin_layout Enumerate
+Наличие вызовов разных функций --- о внутреннем строении сложно что-либо
+ сказать.
+\end_layout
+
+\begin_layout Section
+Суперкомпуктеры
+\end_layout
+
+\begin_layout Standard
+Поймем, как измеряется производительность суперкомпьютеров.
+ FLOPS (Floating Operations Per Second) - количество операций с плавающей
+ точкой, которое можно делать в секунду.
+\end_layout
+
+\begin_layout Example
+Персональный компьютер - 6 ядер, 16 Gb оперативки, 6Tb HDD, 60 GFLOPS, Windows,
+ Linux, Mac OS - что можно запихать в один узел.
+\end_layout
+
+\begin_layout Standard
+Текущая производительность - между пента и экзофлопсом.
+ Компьютер экзофлопсной производительности будет построен на других основах,
+ считают специалисты (надо будет, к примеру, переделать OS).
+\end_layout
+
+\begin_layout Example
+БЭСМ-6 (1968) - Большая Электронно-Счётная Машина.
+ Производительность - 1 MIPS (
+\begin_inset Formula $10^{6}$
+\end_inset
+
+ операций - инструкций в секунду, плавающей точки не было --- эмуляция на
+ целочисленной арифметике), 1 процессоров, OS - КРАБ, RAM 128 Kb, объем
+ - 512 Kb на барабане, 3 Mb на ленте.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example
+\begin_inset Quotes eld
+\end_inset
+
+Ломоносов
+\begin_inset Quotes erd
+\end_inset
+
+, 2010 год.
+ Производительность --- 397 TFLOPS, число процессоров --- 10260 (ядер 41040),
+ OS --- Clustrx (Linux), RAM 73920Gb, места --- 1382400Gb (80 место в мире)
+ --- занимает приблизительно лекционную аудиторию (есть Ломоносов версии
+ 2 --- занимает первое место в стране, 31 место в списке).
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example
+К, Япония, 2011 год (5 место).
+ Производительность --- 10510 TFLOPS, число процессоров --- 88128 (ядер
+ 705024), OS - mod Linux, RAM 1410048Gb --- занимает место ангара.
+ Построен достаточно большой центр --- большое здание охлаждает компьютер
+ (жидкостное охлаждение, крутые процессоры --- обогревание районов, энергии
+ жрет как один микрорайон --- 12 MВатт) --- на первом месте в Green 500.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Standard
+Крутость определяется тестом по перемножению матриц, и количество операций
+ в секунду --- характеристика машины.
+ Есть два списка - Top-500 и Green-500 -- производительность делится на
+ потребленную мощность.
+ Сегодня, считают, что более важные операции --- действия на графах.
+ Поэтому появился список Top-Graph-500 (на первом месте - все тот же японский
+ компьютер).
+ Но в них есть проблема --- много хаотических передач данных, т.е.
+ он лучше работает по передаче.
+ Тест построен так: обход графа в ширину, при этом мера производительности
+ --- количество тысяч ребер, обрабатываемых за одну секунду.
+ Итак, данный тест проверяет случаи, в которых не так много вычислений,
+ как передачи данных.
+\end_layout
+
+\begin_layout Standard
+Тенденции в мире по поводу OS: в целом, все работают под Linux.
+ По организациям --- по количеству используется в Research области (прикладной,
+ проверка правильности технологических решений), Science (Academic) занимается
+ устройством мира в целом, по количеству --- индустрия (проектирование всякой
+ всячины).
+ В нашей стране --- по науке и образованию в 2011 году (сейчас уже доля
+ промышленности выросла по этой мере).
+ По графику видно, что в один момент ударились в образовании.
+\end_layout
+
+\begin_layout Standard
+Есть специальные тесты для проверки коммуникаций, по которым можно проверять
+ скорость (чем темнее, тем медленнее).
+ В 
+\begin_inset Quotes eld
+\end_inset
+
+Ломоносове
+\begin_inset Quotes erd
+\end_inset
+
+ шум неравномерно распределен по системе (причем общая память намного шустрее
+ работает, чем передача между узлами).
+\end_layout
+
+\begin_layout Standard
+Как можно измерять производительность суперкомпьютера:
+\end_layout
+
+\begin_layout Enumerate
+Просто посчитать (IPS) --- более-менее для целочисленной арифметики.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Пиковая производительность --- максимальная теоретическая производительность
+ (не достигается).
+\end_layout
+
+\begin_layout Enumerate
+Тесты от производителя --- оптимизация железа (если будет использоваться
+ определенный тест, то разработчики подгоняют железо под параметры теста).
+ Top-500 (HPL написаны на C (Джек Донгара) --- используется матрица и методом
+ Гаусса решается система линейных уравнений, есть проблемы с выбором строки
+ или столбца; разработчик может подогнать размер матрицы -- подходило для
+ кеша, к примеру) подвергается большой критике.
+\end_layout
+
+\begin_layout Enumerate
+Реальная производительность на задачах
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Система тестов NASA Parallel Banchmark, Fortran (люди решили написать более
+ интеллектуальные тесты), использующая разные модели распараллеливания,
+ используются практические задачи (к примеру, запуск и полет космических
+ кораблей).
+ Есть 13 областей для распараллеливания.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+MG (MultiGrid) --- решается система дифференциальных уравнений (теплопроводности
+, к примеру), и есть много различных сеток --- проблема совмещения;
+\end_layout
+
+\begin_layout Enumerate
+CG (Conjugate Gradients);
+\end_layout
+
+\begin_layout Enumerate
+FT - метод быстрого преобразования Фурье (FFTW) --- возникает хаотический
+ паттерн (Butterfly) для обращения в память;
+\end_layout
+
+\begin_layout Enumerate
+IS (Integer Sort) --- берется набор чисел, разбитый по определенным блокам,
+ в меру интенсивный обмен;
+\end_layout
+
+\begin_layout Enumerate
+EP --- генерация независимых случайных величин, конкретная оценка работы
+ узлов в кластере по отдельности;
+\end_layout
+
+\begin_layout Enumerate
+SP;
+\end_layout
+
+\begin_layout Enumerate
+LU --- аналог HPL;
+\end_layout
+
+\begin_layout Enumerate
+UA --- уравнение теплопроводности в кубе при мигрирующем источнике тепла
+ (там, где тепла много, надо сгущать сетку --- проблемы при обращении в
+ память);
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+HPCG (Джек Донгара, написан на C++) --- система линейных уравнений методом
+ сопряженных градиентов (минимум на квадратичной функции), алгоритм зашит
+ + типы матриц, но можно использовать свои данные (под каждый тип --- определенн
+ый способ передачи информации через сеть), поэтому всякая неэффективность
+ вылезет сразу.
+ Матрицы берутся из разных прикладных областей.
+ Есть серьезные отличия от Graph-500: здесь есть серьезный обмен и вычисления.
+\end_layout
+
+\begin_layout Section
+Infiniband
+\end_layout
+
+\begin_layout Standard
+Infiniband --- самая популярная система интерконнекта, которая на сегодняшний
+ день применяется в кластерах.
+ Одним из важнейших отличий Infiniband --- ограничения на провода: (1) Infiniban
+d через оптоволокно; (2) Infiniband через медь.
+\end_layout
+
+\begin_layout Standard
+Бывает Qdr (количество проводов внутри кабеля --- влияет на стоимость технологии
+: Infiniband гарантирует, что коллизии между проводами не будет).
+ Технология Infiniband поддерживает RMA (Remote Memory Access) --- инициированны
+й пакет находится не только в сетевухе, но и может оказаться сразу на месте
+ (позволяет экономить на время доставки).
+ Далее, в Infiniband есть широковещание --- широковещательный пакет внутрь
+ Infiniband (а не внутрь Ethernet, как обычно понимается).
+\end_layout
+
+\begin_layout Standard
+В Infiniband есть три понятия:
+\end_layout
+
+\begin_layout Enumerate
+HCA --- host - подключение, причем подключенная к PCI-Express; причем сейчас
+ выгоднее послать данные, чем записать на свой жесткий диск (своеобразный
+ кеш).
+\end_layout
+
+\begin_layout Enumerate
+DCA --- host для назначения данных (приемника, отправляется через switched
+ fabric) --- switch-и соединяются между собой.
+ Более того, используется для организации хранилищ (storage).
+ Но разделение узлов через switch есть проблема: чтение из файла мешает
+ для вычисления данных (напряжение switch).
+ Поэтому делают отдельную сеть для организации ввода/вывода (обе сети: основная
+ и ввода -- реализованы через Infiniband).
+\end_layout
+
+\begin_layout Enumerate
+Каждое устройство, которое подключено к Infiniband, получает свой GID (Group
+ Identificator), почти как MAC-адрес, но не совсем:
+\end_layout
+
+\begin_layout Enumerate
+LID (local identifier), и при этом есть subnet manager (знает состояние
+ Infiniband сети, в случае проблем --- lifetime перестройка данных) ---
+ id в терминах subnet manager: (если происходит подключение карты к Internet,
+ то ей присваивается LID).
+ Протокол при начале работы выбирает несколько фишек --- и если мы не можем
+ их передать, и протокол маршрутизации выберет новый путь с большим количеством
+ фишек (реализовано на основе модели сети Петри, см.
+ далее).
+ Задача subnet manager --- выставить очередной линк и установить величину
+ порога (завуалированная пропускная способность линка).
+ В Internet (Ethernet) очень сложно работать на такой модели, ибо внешняя
+ среда непредсказуема.
+ Такой способ организации сети гарантирует отсутствие коллизий.
+ Пакет не отпускается, пока он не будет передан (в отличие от Ethernet).
+ При добавлении устройства прописываются данные в таблицу маршрутизаций
+ (subnet manager делает).
+ Хорошо для внутренней работы, но не для организации сетей (ибо сеть будет
+ иметь огромную таблицу маршрутизации, что плохо).
+\end_layout
+
+\begin_layout Standard
+Вопрос: как передать данные? У каждого switch есть набор адресов, куда надо
+ пересылать данные.
+ (Здесь будет картинка)
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+tikz{
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (0,0) -- ++(2,0) -- ++(0,2) -- ++(-2, 0) -- ++(0, -2);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (2, 1) -- ++(1,0) -- ++(0,-1) -- ++(2, 0) -- ++(0,2) -- ++(-2, 0) --
+ ++(0, -2);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Notation*
+Сеть Петри: есть некоторые узлы (граф) и некоторые пороги.
+ В вершинах графа существуют фишки --- могут перемещаться из узла в узел.
+ При этом фишки перескакивают через порог, если в ней накопилось достаточное
+ число фишек.
+\end_layout
+
+\begin_layout Section
+Обзор технологий параллельного программирования
+\end_layout
+
+\begin_layout Standard
+Технологии можно построить по уровням.
+ Можно построить пирамиду по принципу удаленности от железа:
+\end_layout
+
+\begin_layout Enumerate
+Предоставление ОС (pthread, socket, fork, clone) --- набор системных вызовов
+ (уровень ОС).
+ Задач: обеспечить переносимое относительно конкретного железа параллельное
+ использование ресурсов.
+\end_layout
+
+\begin_layout Enumerate
+Низкоуровневые библиотеки параллельного программирования (может использовать
+ библиотеки из первого уровня, MPI, openMP, CUDA, openshmem).
+ Задача: абстрагирование от конкретной технологии, через которую происходит
+ передача данных (к примеру, может использоваться Infiniband или разделяемая
+ память IPC).
+ Библиотека на Runtime может определить, какую технологию лучше использовать
+ при передаче данных в рамках узлах кластера.
+ При вводе/выводе MPI может понять, какую коммуникационную сеть использовать
+ (а при этом сами не знать, что в действительности произошло).
+ MPI обеспечивает механизм переносимости ОС.
+ OpenMP предоставляет независимый интерфейс (но компилятор должен уметь
+ организовывать, но реализация идет лучшим способом, как в Windows, так
+ и в Linux, и в Android: если есть thread, то можно использовать определенную
+ опциональность).
+ CUDA должен обеспечить передачу данных на графическую карту и обратно.
+ Openshmem будет хорошо работать при наличии RMA (см.
+ выше), иначе использует MPI.
+\end_layout
+
+\begin_layout Enumerate
+Обертки над вторым уровнем.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+К примеру, binding Python MPI.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Другой способ --- написание высокоуровневых библиотек (на низких уровнях
+ использует (2), а предоставляет программный интерфейс) --- 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Cublas: (blas -- операции с линейной алгеброй).
+ Для IBM есть реализация интерфейса BLAS: ESSL, PESSL (использует конкретные
+ инструкции для IBM), для Intel --- mkl, для графической карты --- cublas.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Curandom --- библиотека для случайных чисел на графической карте (цель:
+ использование случайных чисел на графической карте).
+ 
+\end_layout
+
+\begin_layout Enumerate
+FFTW --- библиотека для быстрого преобразования Фурье в MPI.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Hypre работает средствами MPI и openMP (при этом в начале происходит настройка
+ на архитектуру и специфичные тесты: размеры кеша, количество кешей ит.д.),
+ и при этом перераспределяет данные для вычисления данных по линейной алгебре.
+\end_layout
+
+\begin_layout Enumerate
+Plasma работает на приципе data-flow: если есть маленькие элементы, то удобно
+ сразу собирать данные поточно.
+\end_layout
+
+\begin_layout Enumerate
+Petsi --- библиотека линейной алгебры.
+\end_layout
+
+\begin_layout Enumerate
+Cilk++
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Написание высокоуровневых языков параллельного программирования: компиляция
+ происходит в две стадии -- (1) Компиляция в код, к примеру, MPI, C++; (2)
+ натравка компиляторов для параллельных программ.
+ Примеры: DVM --- 
+\begin_inset Quotes eld
+\end_inset
+
+расширенный MPI + Fortran
+\begin_inset Quotes erd
+\end_inset
+
+, подстановка pragma.
+ Charm++ -- набор charm-ов, которые обмениваются активными сообщениями (вместе
+ с сообщением приходит код для обработки сообщения).
+ При такой модели можно избегать глобальных синхронизаций.
+ При этом сообщения обрабатываются в отложенном режиме (аналогично функциональны
+м языкам): при приходе сообщения вызывается метод char-а (char -- объект
+ C++, заранее нельзя сказать, на каком числе будет выполняться код [на практике
+ -- не меняется число узлов]).
+\end_layout
+
+\begin_layout Enumerate
+PGAS: X10, UPS.
+ Модель: 
+\begin_inset Formula $n$
+\end_inset
+
+ процессоров, у каждого своя память, есть окно, которое будет синхронизироваться
+ для всех процессов (иллюзия общей памяти --- при выполнении команды put
+ данные будут положены).
+ Хорошо работает на архитектуре NUMA, (на кластерной архитектуре приемлемо
+ будет работать только с RMA).
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Библиотеки и языки предметной области: обычно внутри себя используют второй
+ уровень, но могут пользоваться третим.
+ Программист даже не подозревает, что его программа будет работать параллельно
+ (предоставляется язык, понятный для его предметной области): речь идет
+ о DSL (Domain Specific Language): все, в итоге, отображается в параллельную
+ программу, но таких языков все-таки мало.
+ 
+\series bold
+Все детали скрыты от программиста! 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Норма: описываются операции над сетками --- необходимо для решения сеточных
+ уравнений (теплопроводности, колебаний, Навье-Стокса 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+ отображается в параллельный код).
+ У человека практически нет возможности влезать в код (сравнимо с влезанием
+ в ассемблерный код на C++).
+\end_layout
+
+\begin_layout Enumerate
+Games, Gromacs --- движение атомов.
+\end_layout
+
+\begin_layout Enumerate
+Namd --- использует Charm++.
+\end_layout
+
+\begin_layout Enumerate
+Flulend, Open Focus, Flow Vision и огромное количество.
+\end_layout
+
+\end_deeper
+\begin_layout Section
+MPI Advanced.
+ Односторонние коммуникации, MPI_IO
+\end_layout
+
+\begin_layout Standard
+Некоторые устройства подддерживают RMA.
+ Односторонние коммуникации сделаны в MPI для их поддержки.
+ Для этого существует механизм окон.
+ В памяти каждого процесса выделяется область (окно), которая может располагатьс
+я произвольным образом в каждом из процессов (даже может быть разного размера).
+ При этом, в каждом окне есть локальная составляющая окна (мы можем знать,
+ где мы находимся в другом процессе --- смещение относительно начала окна).
+ Параметры узнаются от функций, которые регистрируют окно.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+tikz {
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (0,0) -- ++(2,0) -- ++(0,2) -- ++(-2, 0) -- ++(0,-2);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (0, 0.5) -- ++(2, 0) -- ++(0, 0.5) -- ++(-2, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (4, 1) -- ++(2, 0) -- ++(0, 0.5) -- ++(-2, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (4, 0) -- ++(2, 0) -- ++(0,2) -- ++(-2, 0) -- ++(0, -2);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+При регистрации окна в памяти соответствующего процесса происходит отображение
+ в сетевом оборудовании на данный процесс (сетевая карта через PCI-Express
+ кладет данные в память, и процессор в этом мероприятии не задействован,
+ только через коммуникационное оборудование).
+ Хотим получить синхронизированные данные в каждом окне.
+ При этом не организовывается запись в ячейку памяти.
+ Поэтому создается все при помощи функций:
+\end_layout
+
+\begin_layout LyX-Code
+MPI_WIN win;
+\end_layout
+
+\begin_layout LyX-Code
+MPI_WIN_CREATE(...); // создаёт окно
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Put(void* buffer, size, MPI_Type, where,); // можно создать shared окно
+ или private окно
+\end_layout
+
+\begin_layout LyX-Code
+--- при этом тот, кто получает инфу, не знает об этом, на PCI-Express объявляетс
+я 
+\end_layout
+
+\begin_layout LyX-Code
+событие регистрации записи
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Get(...); // можно подсматривать чужую память
+\end_layout
+
+\begin_layout LyX-Code
+MPI_PutR(...); // начиная с версии 3, тогда можно просматривать все через request-ы
+\end_layout
+
+\begin_layout LyX-Code
+MPI_GetR(...); // начиная с версии 3;
+\end_layout
+
+\begin_layout Notation*
+Есть схожая библиотека Open Shmem.
+\end_layout
+
+\begin_layout Standard
+При этом за чтением и записью одновременной никто не следит.
+ Чтобы следить за данными, можно использовать следующие функции:
+\end_layout
+
+\begin_layout LyX-Code
+MPI_BARRIER(...); // нежелательно
+\end_layout
+
+\begin_layout LyX-Code
+MPI_WIN_Fence(...); // вводится состояние эпохи: операции с локальной памятью
+ закончены; 
+\end_layout
+
+\begin_layout LyX-Code
+гарантирует, что закончилась эпоха 
+\end_layout
+
+\begin_layout LyX-Code
+(после действия никто не производит, к примеру, Put-ы закончились)
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Accumulate(...) // аналог Reduce, выполняет при заполнении необходимые
+ операции (используя RMA)
+\end_layout
+
+\begin_layout Standard
+В MPI 3 появились коллективные неблокирующие операции:
+\end_layout
+
+\begin_layout LyX-Code
+MPI_IBarrier()
+\end_layout
+
+\begin_layout LyX-Code
+MPI_IBCast()
+\end_layout
+
+\begin_layout Standard
+По идее, MPIch может поддерживать такие операциию.
+ Эти штуки крайне сложно реализовать, поэтому ее не было в стандартах (особенно
+ в аппаратуре).
+ При помощи новых штук MPI быстрее работает.
+\end_layout
+
+\begin_layout Standard
+Следующая интересная вещь --- MPI_IO.
+ К примеру, у нас есть файл.
+ Позволим в этот файл писать разным процессам через коммуникационную сеть:
+ реализация MPI пытается это оптимизировать (надо ведь доставить информацию
+ до узлов ввода-вывода).
+ Стандартные интерфейсы могут работать, но MPI может быстрее.
+ 
+\end_layout
+
+\begin_layout Standard
+В файле создается View.
+ Операция записи производит в View атомарно.
+ Каждому процессу отдается пространство во View.
+ Каждый из процессов пишет в свою область файла (тем самым гарантируется,
+ что разные процессы пишут в разное место, и не надо будет скакать, ибо
+ участки находятся рядом).
+ Операция происходит посредством многих view.
+ Далее --- устройства окон.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+tikz {	
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (0,-0.5) -- ++(15, 0) -- ++(0,0.5) -- ++(-15, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (0,-0.5) -- ++(0.5, 0) -- ++(0, 0.5) -- ++(-0.5, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (0.5,-0.5) -- ++(0.5, 0) -- ++(0, 0.5) -- ++(-0.5, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (1,-0.5) -- ++(0.5, 0) -- ++(0, 0.5) -- ++(-0.5, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (1.5,-0.5) -- ++(0.5, 0) -- ++(0, 0.5) -- ++(-0.5, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (2,-0.5) -- ++(0.5, 0) -- ++(0, 0.5) -- ++(-0.5, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (2.5,-0.5) -- ++(0.5, 0) -- ++(0, 0.5) -- ++(-0.5, 0) -- ++(0, -0.5);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Функции:
+\end_layout
+
+\begin_layout LyX-Code
+MPI_File_open();// открывается файл
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Set_View(); // создается окно - привязывается к типу данных
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Read(); // оптимизирована, отправляются в сумме (но возможно даже, через
+ другую сеть);
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Read_at(); // lseek + read
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Write(); // 
+\end_layout
+
+\begin_layout LyX-Code
+MPI_Write_at(); // lseek + write
+\end_layout
+
+\begin_layout Standard
+Можно профилировать приложения при помощи pmpi, к примеру, исходник ---
+ P_MPI_Send (внутри MPI_Send вызывается P_MPI_Send --- можно отправлять
+ всю инфу в журнал).
+ Управляется дополнительными ключами в mpicc.
+\end_layout
+
+\begin_layout Standard
+Не стоит пользоваться client-socket соединениями (один открыл порт 80, организуе
+тся сеть через внешний коммуникатор, есть в стандарте: кому-то надо было
+ или хороший contibutor якобы, пример, слежение данных за птицами через
+ wi-fi).
+\end_layout
+
+\begin_layout Standard
+Порождение MPI процессов по ходу дела --- MPI_Comm_spawn().
+\end_layout
+
+\begin_layout Standard
+В ранних версиях MPI если один процесс погибал, то убивается все приложения.
+ Сейчас есть MPI_Err_Handler --- callback на неблагоприятное событие.
+ Если кто-то сдох, то устанавливается статус и срабатывает MPI_Err_Handler().
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+newpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part
+Распределенные вычисления (Дмитрий Прокопцев, dprokoptsev@gmail.com)
+\end_layout
+
+\begin_layout Section
+Основы распределенных систем
+\end_layout
+
+\begin_layout Standard
+Лучше расширять сеть географически.
+ Проблема состоит в том, что с ростом узлов вычислительной системы надежность
+ системы будет падать.
+ Считается, что надежность узла равна 
+\begin_inset Formula $99,5\%$
+\end_inset
+
+: если у нас 1000 машин, то в любой момент времени в среднем будет лежать
+ 5 (может рубануть электричество, сгореть, затопить и т.д.).
+ Никакие подобные события не будут являться основанием неработоспособности
+ системы (потребности пользователей необходимо удовлетворять).
+ В целом, мы будем заниматься построением систем с учетом выходом из строя.
+\end_layout
+
+\begin_layout Standard
+Определений распределенных систем много, но будем считать, что это та система,
+ которая сохраняет работоспособность при отказе части узлов.
+\end_layout
+
+\begin_layout Standard
+Исторически хотели завуалировать принцип работы системы: надо создать иллюзии
+ работы на одном узле.
+ К примеру, есть программа, мы хотели, чтобы отдельные части (функции) работали
+ в разных частях.
+\end_layout
+
+\begin_layout Standard
+К примеру, локальная программа имеет вид:
+\end_layout
+
+\begin_layout LyX-Code
+int divisor(int x);
+\end_layout
+
+\begin_layout Standard
+У нас еще маленькая машина, которая вызывает divisor, и огромная машина.
+ Поэтому если есть клиентский код, затем происходит его упаковка (client
+ stub), которая декодируется в байт-код, к примеру, JSON, чтобы можно было
+ разобрать код далее, пересылает RPC-server, пересылает по сети, распаковывает
+ через server stub, и доходит до server code (и сервер не знает, где вообще
+ находится код).
+\end_layout
+
+\begin_layout Standard
+Но есть некоторые проблемы: 1) каким образом надо представлять данные (проблема
+ сериализации); 2) надо написать stub-ы для распаковки и упаковки (будем
+ описывать интерфейсы на специальном языке: какие функции, аргументы, как
+ можно сериализовать).
+ Но не всякий язык годен для этого.
+ К примеру, рассмотрим код на C++
+\end_layout
+
+\begin_layout LyX-Code
+void min_max(int* begin, int* end, int* min, int* max).
+\end_layout
+
+\begin_layout Standard
+Но указатели --- это области памяти, поэтому надо будет более высокая оберка:
+\end_layout
+
+\begin_layout LyX-Code
+void min_max(int[] range, out int, out int);
+\end_layout
+
+\begin_layout Standard
+На RPC-сервере остается задание посылки/пересылки/отправки на распаковку.
+ Поэтому возможна настройка stub-ов на нескольких языках.
+ В некоторых языках есть свой средства сериализации (Java, Python) --- посылать
+ напрямую.
+ Но при этом дихотомии на сервере и клиенте не возникает (один и другой
+ узел может быть использован в качестве сервере).
+\end_layout
+
+\begin_layout Standard
+Но что, если мы хотим не только вызывать функции? Поэтому уже есть желание
+ получит распределенно-объектные системы (посылать сообщения от объектов).
+\end_layout
+
+\begin_layout Standard
+Пример банковской системы:
+\end_layout
+
+\begin_layout LyX-Code
+void deposit(acc_id, amount);
+\end_layout
+
+\begin_layout LyX-Code
+void withdraw(acc_id, amount);
+\end_layout
+
+\begin_layout Standard
+Хочется дергать системы, но есть проблема: выполнилась одна из них, но появилась
+ проблема выполнения другой.
+ Возникает идея транзакций: но где их вызывать.
+ Непараллельный код транзакций:
+\end_layout
+
+\begin_layout LyX-Code
+class TX {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+void deposit(...);
+\end_layout
+
+\begin_layout LyX-Code
+void withdraw(...);
+\end_layout
+
+\begin_layout LyX-Code
+void commit(...);
+\end_layout
+
+\begin_layout LyX-Code
+void rollback(...);
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+TX* begin_tx();
+\end_layout
+
+\begin_layout Standard
+Можно ли перенести это на RPC? Проблема в указателе.
+ Можно переслать машинный адрес, но нам нужен физический доступ из необходимого
+ места.
+ К примеру, писать распределенную файловую систему:
+\end_layout
+
+\begin_layout LyX-Code
+class File {
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+void read(void *, size_t);
+\end_layout
+
+\begin_layout LyX-Code
+void write(const void *, size_t);
+\end_layout
+
+\begin_layout LyX-Code
+void close();
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+File* open(p* dh);
+\end_layout
+
+\begin_layout Standard
+Но хотим пересылать ссылки на объект.
+ Обычно указывается еще один объект ссылки, и будем хранить кроме локальных
+ ссылок, еще будут храниться глобальные ссылки.
+ Поэтому рядом с RPC-серверами в модели появляются хранилища объектов.
+ И теперь вызов функции будет происходить следующим образом: как мы будем
+ отправлять указатели: идем в хранилище, достаем идентификатор, и отправить
+ обратно (
+\begin_inset Formula $map<ObjID,void*>$
+\end_inset
+
+).
+ Далее оборачиваем идентификатор в клиенте, и отдаем обратно.
+ Поэтому у нас будет целый класс-заглушка (хотим вернуть похожее на прокси-класс
+).
+ Здесь опять же нет никакой дихотомии (можно пересылать на разные узлы).
+\end_layout
+
+\begin_layout Standard
+На удаленном вызове процедур была еще проблема: как узнать, где код должен
+ выполняться.
+ Обычно знания конфигурируются извне (к примеру, на старте).
+ Но, к примеру, можно присобачить к objId host и port, получится тройка,
+ полностью идентифицирующая его.
+ Поэтому мы получаем хороший прокси.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+tikz {	
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (0,0) -- ++(0,2) -- ++(2,0) -- ++(0,-2) -- ++(-2, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (5,0) -- ++(0,2) -- ++(2,0) -- ++(0,-2) -- ++(-2, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (2,0.5) -- ++(3,0);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (2,1.5) -- ++(3,0);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (7,1) -- ++(3,1);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (10, 1.5) -- ++(0,1) -- ++(1,0) -- ++(0,-1) -- ++(-1, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (10, 0) -- ++(0,1) -- ++(1,0) -- ++(0,-1) -- ++(-1, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+draw (10, -1.5) -- ++(0,1) -- ++(1,0) -- ++(0,-1) -- ++(-1, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+К примеру, у нас есть узлы 0-99, 100-199, ....
+ Тогда если клиент запрашивает begin: то обратно пересылается через прокси
+ c 
+\begin_inset Formula $objectID$
+\end_inset
+
+, и затем идет общение напрямую, минуя прокси.
+ Но вопрос: некоторые ссылки нужны уже не будут.
+ Первый подход --- вызов delete: происходит удаление объекта при вызове,
+ но надо всем договориться, чтобы все корректно освободили объект и закончили
+ работу с ним.
+ Второй подход --- хранить число ссылок на объект (и когда никто не используют
+ --- удалять их).
+ Надо следить за копированием ссылок, следить за циклическими ссылками.
+ Оба подхода имеют минусы.
+ На локальной машине можно сделать сборку мусора, но такой объект не подходит.
+ Поэтому проблема освобождения остается в силе.
+\end_layout
+
+\begin_layout Standard
+Но возникают замечательные проблемы с RPC: если что-то отвалилось/вырубилось
+ (умерший компьютер).
+ В течение которого времени стоит ожидать ответ? Мы не знаем политики определени
+я настроек, и как восстанавливать данные.
+ Но если говорить про TSP, то можно запросить снова.
+ Но есть критичные для повторения побочные эффекты (все, кроме вычисления
+ результатов функций).
+\end_layout
+
+\begin_layout Standard
+Далее, предположим, что машина умерла (память сдохла), и все ссылки умерли.
+ Но хранить ссылки везде плохо --- получается лишний траффик (пропускной
+ способности не останется).
+ Но еще сложно отличить умершую машину от умершей сети (выдернули link,
+ а затем вернули, и начали использовать ссылки их невалидно).
+ Важно помнить, что запросы доходят только через некоторое время!
+\end_layout
+
+\begin_layout Standard
+Все вышеперечисленные проблемы наделены проблемы излишней абстракции.
+ И когда мы не знаем семантики, мы не в состоянии обеспечить абстрагировать
+ распределенность системы, т.е.
+ создавать иллюзию локальности.
+ Решить проблемы в рамках данной парадигмы практически невозможно.
+\end_layout
+
+\begin_layout Standard
+Все это было в районе девяностых систем.
+ А что, если не пытаться решить все проблемы сразу? Распределенные вычислительны
+е системы, к примеру, решают свои проблемы.
+ Распределенные базы данных решают другие проблемы (хранения данных).
+ Таким образом, если решать конкретные задачи, то мы получим лучшие результаты,
+ решить больше проблем.
+ В итоге можно предоставить более хорошую иллюзию.
+\end_layout
+
+\begin_layout Standard
+Сейчас этот метод (без специализации) не очень часто используется, но в
+ зачаточном состоянии есть наличие RPC.
+ К примеру, в распределенной базе данных мы хотим читать 10 строк, а затем
+ 
+\begin_inset Quotes eld
+\end_inset
+
+позвонить
+\begin_inset Quotes erd
+\end_inset
+
+ и читать из курсора еще 10 строк (по сути ссылку на объект БД).
+ Похожие на RPC системы можно встретить в public interface.
+ (К примеру, Google Maps API: но + под капотом идут перезапросы, распределителей
+, обход проблем внешними средствами).
+\end_layout
+
+\begin_layout Section
+Парадигмы проблем, виды отказов
+\end_layout
+
+\begin_layout Standard
+У нас есть распределенная система и часы, которые следят за временем.
+ Но иногда ломаться может все.
+ Рассмотрим некоторые парадигмы:
+\end_layout
+
+\begin_layout Enumerate
+Fail-stop --- узел сдох окончательно, требуется реконфигурация.
+\end_layout
+
+\begin_layout Enumerate
+Fail-recovery --- узел помер на время, он может быть восстановлен самостоятельно
+ или посредством человека.
+ При этом реконфигурация не требуется.
+ Но есть проблема со стиранием некоторых состояний в узле (и надо решать
+ актуальность системы)
+\end_layout
+
+\begin_layout Standard
+Заметим, что в этих случаях узлы играют так, как мы ожидаем (посылают сообщения
+ по протоколу, может быть, ломаются).
+ Но могут быть злонамеренные узлы (не играющие по правилам):
+\end_layout
+
+\begin_layout Standard
+3.
+ Byzantine (Византийские узлы) --- он может сказать одному узлу, что живой,
+ а другому --- что умер (или передавать специально неактуальную среду).
+ Такие системы могут быть созданы, к примеру, для посылки мусора, или получать
+ секретные данные, поддельные DNS-серверы.
+ Чтобы решать проблемы, можно собрать общее мнение у узлов (хотя бы 
+\begin_inset Formula $\frac{2}{3}$
+\end_inset
+
+ от всего количества).
+\end_layout
+
+\begin_layout Standard
+Еще может падать линк (соединение между узлами).
+\end_layout
+
+\begin_layout Enumerate
+Perfect --- совершенные каналы связи (принимает все сообщения ровно один
+ раз в том же порядке).
+ Можно воссоздать, к примеру, в switch-е или доверительной системе.
+\end_layout
+
+\begin_layout Enumerate
+Если сообщения теряются 
+\begin_inset Formula $+-$
+\end_inset
+
+ честно (Fair-Loss links) --- для любого сообщения существует положительная
+ вероятность доставки сообщения.
+ Из Fair-loss можно сделать Perfect (посылать много раз одно сообщение).
+\end_layout
+
+\begin_layout Enumerate
+Byzantine --- перестановка сообщений местами, замена сообщений.
+ Встречается в более частой среде, нежели чем между узлами (к примеру, Московско
+е метро).
+ Но при этом, если поставить определенные требования к сообщениям (к примеру,
+ криптографическое шифрование).
+ Поэтому можно изменить Byzantine в Fair-Loss.
+\end_layout
+
+\begin_layout Standard
+Таким образом, по транзитивности можно получить из Byzantine соединения
+ в Perfect.
+ При этом еще можно добиваться подтверждения сообщения.
+ При этом, если не хотим хранить сообщения, то можно хранить их номер.
+ Поэтому можно добиться результата с определенной вероятностью успеха.
+\end_layout
+
+\begin_layout Standard
+Но, конечно, не всегда можно различить отрыв линка от отрыва узлов.
+\end_layout
+
+\begin_layout Standard
+Осталось рассмотреть часы.
+ Но мы хотим узнавать факты относительно производительности системы:
+\end_layout
+
+\begin_layout Enumerate
+Sync --- есть верхнее ограничение на время пересылки и время обработки (тогда
+ можно делать предположения относительно нашей системы).
+ К примеру, если есть протокол, который через время 
+\begin_inset Formula $\tau$
+\end_inset
+
+ должен выполнять операцию, то если через 
+\begin_inset Formula $3\tau$
+\end_inset
+
+ должны получить ответ.
+\end_layout
+
+\begin_layout Enumerate
+Eventually sync --- система почти всегда асинхронна, но есть гарантия, что
+ наступит определенный момент времени, когда наступит синхронизация.
+\end_layout
+
+\begin_layout Enumerate
+Async --- асинхронные системы.
+\end_layout
+
+\begin_layout Standard
+При написании распределенной системы надо выбрать мир, в котором мы собираемся
+ создавать распределенную систему (от этого будет зависеть сложность алгоритмов:
+ sync --- достаточно простые алгоритмы).
+ Но достаточно сложные алгоритмы существуют (к примеру, BitCoin).
+\end_layout
+
+\begin_layout Section
+Алгоритмы на распределенных системах
+\end_layout
+
+\begin_layout Standard
+Алгоритмы на распределенных системах решают злободневные задачи.
+\end_layout
+
+\begin_layout Example*
+Разделяемый регистр (Shared Register).
+ В ней есть две операции: 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+-> write(v)
+\end_layout
+
+\begin_layout LyX-Code
+-> read() -> v
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Но система настолько сложна (проблема репликации, проблема разрыва и тому
+ подобное).
+ При переходе на ненадежные системы простейшие операции могут быть достаточно
+ сложны
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example*
+Broadcasting --- надо гарантировать, что до каждого узла дошло определенное
+ значение.
+ Если система надежная, то можно послать все подряд.
+ Но могут быть проблемы: 1) узел ушел, а затем вернулся; 2) узел, посылающий
+ сообщения, сдох.
+ Небольшое решение проблемы: получил одно, передай другим, и пометь сам,
+ что получил сообщение.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example*
+Consensus --- есть операции 
+\begin_inset Formula $propose\rightarrow x$
+\end_inset
+
+, 
+\begin_inset Formula $decide\leftarrow x$
+\end_inset
+
+.
+ Несколько узлов посылают значения, а затем решается, какое значение выбрать.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Example*
+Leader Election --- иногда в равноправной системе надо выбрать лидера самостояте
+льно.
+ При этом мы хотим, чтобы лидер всегда был один.
+ Могут происходить события 
+\begin_inset Formula $leader\leftarrow n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Проблемы с алгоритмами начинаются в том случае, когда от системы требуется
+ меньше проблем.
+\end_layout
+
+\begin_layout Standard
+Далее будем рассматривать модель 
+\series bold
+Consensus 
+\series default
+в случае Fair-Recovery.
+\end_layout
+
+\begin_layout Algorithm*
+(PAXOS) В данной системе будут существовать определенные роли:
+\end_layout
+
+\begin_layout Enumerate
+Client.
+\end_layout
+
+\begin_layout Enumerate
+Voter (Acceptor).
+\end_layout
+
+\begin_layout Enumerate
+Coordinator (Proposer).
+\end_layout
+
+\begin_layout Enumerate
+Learner.
+\end_layout
+
+\begin_layout Standard
+Изначально клиент выбирает proposer и посылает ему propose на достижение
+ консенсунса.
+ Далее proposer выбирает номер попытки и посылает сообщение 
+\begin_inset Formula $prepare(i)$
+\end_inset
+
+.
+ Часть из них будет отвечать на этот запрос: посылается 
+\begin_inset Formula $ack(i,x)$
+\end_inset
+
+ или опровержение 
+\begin_inset Formula $nak(j)$
+\end_inset
+
+.
+ У каждого 
+\begin_inset Formula $voter$
+\end_inset
+
+ есть текущее значение 
+\begin_inset Formula $i$
+\end_inset
+
+ и 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ Если 
+\begin_inset Formula $propose$
+\end_inset
+
+ получает больше половины подтверждений.
+ Если все посылки были пустыми, то посылается далее 
+\begin_inset Formula $accept$
+\end_inset
+
+ на 
+\begin_inset Formula $voter$
+\end_inset
+
+.
+ Если в этом случае будет 
+\begin_inset Formula $accept$
+\end_inset
+
+, то 
+\begin_inset Formula $voter$
+\end_inset
+
+ посылает сообщение на 
+\begin_inset Formula $learner$
+\end_inset
+
+.
+ И если 
+\begin_inset Formula $learner$
+\end_inset
+
+ получает более половины подтверждений 
+\begin_inset Formula $decide$
+\end_inset
+
+, то алгоритм считается выполненным.
+ Иначе если получаем 
+\begin_inset Formula $nak(j),$
+\end_inset
+
+ то можно послать 
+\begin_inset Formula $nak(j+1)$
+\end_inset
+
+.
+ Больше половины --- чтобы кворумы пересекались, и система могла восстановить
+ актуальную информацию.
+\end_layout
+
+\begin_layout Standard
+Если оторвался 
+\begin_inset Formula $voter,$
+\end_inset
+
+ то ничего страшного.
+ Но есть проблема, если отлетел 
+\begin_inset Formula $proposer$
+\end_inset
+
+, то тогда клиент может начать посылать узлы 
+\begin_inset Formula $p_{2}$
+\end_inset
+
+.
+ Но при этом такая система может реагировать нормально (в итоге, до 
+\begin_inset Formula $learner$
+\end_inset
+
+ дойдет два сообщения 
+\begin_inset Formula $decide\ x$
+\end_inset
+
+, хотя было на 
+\begin_inset Formula $p_{2}$
+\end_inset
+
+ 
+\begin_inset Formula $decide\ y$
+\end_inset
+
+).
+ Пример:
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P1\rightarrow decide\ x$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $V\rightarrow ack(1,empty)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P2\rightarrow prepare\ 2$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P2\rightarrow ack(2,empty)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $Wake\ 1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $decide\ y\ from\ p_{2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P1\rightarrow accept(1,x)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $V\rightarrow nak(2)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P1\rightarrow prepare(3)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $V\rightarrow ack(3,y)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P1\rightarrow accept(3,y)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $ack$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $decide\ y$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+В итоге, можно заметить, что системе неважно, к какому значению пришел результат.
+\end_layout
+
+\begin_layout Standard
+Самая плохая ситуация:
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P1\rightarrow decide\ x$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $V\rightarrow ack(1,empty)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P2\rightarrow prepare\ 2$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P2\rightarrow ack(2,empty)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $Wake\ 1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P1\rightarrow accept(1,x)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $nak(2)\rightarrow P1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P1\rightarrow prepare(3)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $Ack(3,empty)\rightarrow P1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P2\rightarrow accept(2,y)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $Nak(3)\rightarrow P2$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $P2\rightarrow prepare(4)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $Ack(4,empty)\rightarrow P2$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+И такой процесс может продолжаться игра.
+ Но нельзя гарантировать одновременно 
+\begin_inset Formula $leaveness$
+\end_inset
+
+ и 
+\begin_inset Formula $safety$
+\end_inset
+
+.
+ Решение проблем: 1) крут тот, кто имеет высокий приоритет; 2) выполнить
+ 
+\begin_inset Formula $sleep$
+\end_inset
+
+ на определенное время.
+ Тогда вероятность завершения процесса очень сильно увеличивается.
+ Таким образом, алгоритм сойдется почти наверное.
+\end_layout
+
+\begin_layout Standard
+В реальной жизни, внутри одного узла может выполняться сразу несколько ролей.
+ Этот алгоритм адресован к одному консенсусу (после этого произойдет крах,
+ и желательно закопатить узлы).
+ Поэтому новая попытка достичь консенсус не должна зависеть от предыдущей.
+ Обычно эта проблема разрешается установкой определенного 
+\begin_inset Formula $id$
+\end_inset
+
+ к номеру достижения консенсуса.
+ Данный алгоритм является основным блоком для достижения согласия.
+\end_layout
+
+\begin_layout Section
+Распределенные базы данных
+\end_layout
+
+\begin_layout Standard
+База данных --- набор структурированных данных, удобных для модификации
+ и использованиии и интерпретируемых через некоторый понятный человеку язык.
+ Стандартная модель --- магазин: 
+\begin_inset Formula $customer$
+\end_inset
+
+, 
+\begin_inset Formula $order$
+\end_inset
+
+, 
+\begin_inset Formula $goods$
+\end_inset
+
+.
+ В базе данных есть система управления БД (СУБД), которая позволяет выполнять
+ операции 
+\begin_inset Formula $SELECT$
+\end_inset
+
+, 
+\begin_inset Formula $UPDATE$
+\end_inset
+
+, 
+\begin_inset Formula $INSERT$
+\end_inset
+
+, 
+\begin_inset Formula $DELETE$
+\end_inset
+
+.
+ Плюс еще есть концепция транзакций: атомарной в предметной области операции
+ (все выполнены или ни одно не выполнено).
+\end_layout
+
+\begin_layout Standard
+Свойства транзакций:
+\end_layout
+
+\begin_layout Enumerate
+Атомарность
+\end_layout
+
+\begin_layout Enumerate
+Консистентность (
+\begin_inset Formula $consinstency$
+\end_inset
+
+) --- после транзакций сохраняются инвариантов.
+\end_layout
+
+\begin_layout Enumerate
+Изолированность (
+\begin_inset Formula $isolation$
+\end_inset
+
+) --- параллельные транзакции выполняются последовательно.
+\end_layout
+
+\begin_layout Enumerate
+Долгожительность (
+\begin_inset Formula $durability$
+\end_inset
+
+) --- после коммита откат самостоятельно выполнен быть не может.
+\end_layout
+
+\begin_layout Standard
+Появляется такое сочетание, как 
+\begin_inset Formula $ACID$
+\end_inset
+
+.
+ Но в реальных БД это не так: обычно, бывают проблемы с изолированностью.
+\end_layout
+
+\begin_layout Example
+Есть два узла, каждое из которых хранит одно число (как общее хранилище),
+ и мы хотим делать операции 
+\begin_inset Formula $read$
+\end_inset
+
+ и 
+\begin_inset Formula $write$
+\end_inset
+
+.
+ При 
+\begin_inset Formula $write$
+\end_inset
+
+ мы бы хотели записывать в оба узла.
+ То есть, если есть значения 
+\begin_inset Formula $x_{1}$
+\end_inset
+
+ и 
+\begin_inset Formula $x_{2}$
+\end_inset
+
+ с инвариантом 
+\begin_inset Formula $x_{1}=x_{2}$
+\end_inset
+
+.
+ И создаются многочисленные проблемы, аналогичные рассмотренным в прошлом
+ разделе.
+\end_layout
+
+\begin_layout Standard
+В обычной БД либо она работает, либо она падает.
+ В распределенной БД некоторые операции могут дойти и выполниться, а некоторые
+ --- нет.
+ Поэтому к распределенным БД были выдвинуты следующие требования:
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Availability
+\series default
+ (доступность) --- в работоспособной системе любая операция должна успешно
+ завершаться за конечное время.
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Consistency 
+\series default
+(согласованность/линеаризуемость) --- в идеальном мире запрос получается
+ запрос, и сразу на него получается ответ, но появляется прослойка клиента.
+ Поэтому появляется некоторый промежуток времени для отправки сообщения
+ и получения данных.
+ Если операции не пересекаются, то все OK.
+ Линеаризуемость: если операции пересекаются по времени, то они выполняются,
+ но при этом далее будет гарантированно получено, а операция, которая закончилас
+ь ранее, не видит результат операции (к примеру, 
+\begin_inset Formula $write$
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Partition tolerance 
+\series default
+--- сеть между узлами может меняться на сколь угодно большое время, и она
+ должна как-то жить с этим (не предъявляет надежность).
+ При этом понятно, что мы не должны ждать операции с availability (гарантии
+ выполнены).
+\end_layout
+
+\begin_layout Standard
+В 2000 году была сформулирована теорема.
+\end_layout
+
+\begin_layout Theorem*
+(CAP-теорема) Все три свойства не могут быть одновременно выполнены в распределе
+нной системе
+\end_layout
+
+\begin_layout Proof
+Идея доказательства: если требовать надеждную сеть, то получим 
+\begin_inset Formula $!P$
+\end_inset
+
+, если отказ на запись --- то 
+\begin_inset Formula $!A$
+\end_inset
+
+, если необходим 
+\begin_inset Formula $stale$
+\end_inset
+
+ 
+\begin_inset Formula $read$
+\end_inset
+
+, то не 
+\begin_inset Formula $!C$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Таким образом, можно соорудить такой треугольник:
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+CP-systems 
+\series default
+--- пытаемся раскинуть все данные по узлам, и запускаем алгоритм достижения
+ консенсуса, поэтому есть кто-то отлетел, то ребята собирают кворум и совместно
+ договариваются.
+ Другой подход --- проксирование через лидера (выбор лидера, а затем незаметно
+ пересылают данные лидеру, который их упорядочивают).
+ Если лидер умирает, то выбирается новый лидер.
+ Так как можно 
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+AP-systems 
+\series default
+--- храним всю информацию в копиях, а затем на запись говорим, что запрос
+ выполнен, а откладываем ее на потом (появляется понятие 
+\shape italic
+eventual consistency
+\shape default
+ --- существует момент, когда появится необходимая запись).
+ 
+\begin_inset Formula $ $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+AC-systems 
+\series default
+--- если нет линка, то говорим, что ненадежное состояние.
+\end_layout
+
+\begin_layout Standard
+CAP-теорема дала новый толчок.
+ Но бывают БД, которые сложно причислить к одному из типов треугольника
+ (они почти есть, но строгой математической основы нет).
+ Поэтому внутри треугольника может быть множество подтипов.
+ В реальности, мы не можем отказаться от partition tolerance, но на самом
+ деле, между 
+\begin_inset Formula $A$
+\end_inset
+
+ и 
+\begin_inset Formula $\text{С}$
+\end_inset
+
+ нет дихотомии.
+ А если лучше задуматься, то мы можем создать барицентрическую систему координат
+ (тетраэдр), в которой можно получить лучшее ускорение.
+\end_layout
+
+\begin_layout Standard
+Насчет 
+\begin_inset Formula $A$
+\end_inset
+
+, можно договориться, какие операции выполнять, какие нет.
+ Насчет 
+\begin_inset Formula $C$
+\end_inset
+
+, необходимо придумать правила согласованности.
+ И таких моделей больше одной:
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Linearization 
+\series default
+--- есть дополнительный аспект: если между write есть read, и получены новые
+ данные, то мы должны во второй раз вернуть новое значение
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Sequential consistency 
+\series default
+--- концепция последовательного доступа с одного клиента.
+ Пример доставки: если есть операция от клиента, то он говорит ОК и доставляет
+ выполняет после.
+
+\series bold
+ 
+\series default
+Далее на другом узле происходит синхронизация, поэтому новый откат может
+ привести к чтению назад.
+ Аналогичная ситуация происходит и в Твиттере.
+ Есть проблемы: 1) write buffering, 2) read caching.
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Casual consistency 
+\series default
+--- некоторые операции должны соблюдаться причинно-следственные связи (такие
+ операции должны быть выполнены последовательно).
+ Остальные операции могут быть выполнены параллельно (к примеру, комментарии
+ в LiveJournal могут появляться параллельно).
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Serializability 
+\series default
+--- никаких требований по упорядочиванию операции.
+ С одной стороны эта модель слабая, а с другой --- очень сильная: хотим
+ глобальной картины мира, при этом операция либо сразу подтверждается.
+ В итоге, сериализуемость не всегда может быть сериализована.
+ Таким образом, сериализуемость дает порядок на глобальной картине мира.
+\end_layout
+
+\begin_layout Standard
+Конечно, есть еще более слабые связи.
+\end_layout
+
+\begin_layout Example*
+Если три узла: 
+\begin_inset Formula $n_{1}$
+\end_inset
+
+, 
+\begin_inset Formula $n_{2},$
+\end_inset
+
+ 
+\begin_inset Formula $n_{3}$
+\end_inset
+
+.
+ 
+\begin_inset Formula $\text{\ensuremath{client\rightarrow n_{2}\rightarrow n_{2}\rightarrow return}}$
+\end_inset
+
+.
+ Далее, 
+\begin_inset Formula $client\rightarrow n1\rightarrow n3\rightarrow fail$
+\end_inset
+
+.
+ А в конце, 
+\begin_inset Formula $client_{2}\rightarrow n_{2}\rightarrow10$
+\end_inset
+
+.
+ Произошло получение записи, которой нет.
+ (read ancommited).
+ Небольшой плюс --- производительность.
+\end_layout
+
+\begin_layout Standard
+Чем больше мы двигаемся в линеаризуемость, тем больше мы должны платить.
+ Иногда важно только то, что мы получили некоторую информацию.
+\end_layout
+
+\begin_layout Standard
+Если у нас есть логика: после 
+\begin_inset Formula $fail$
+\end_inset
+
+ отдать новый 
+\begin_inset Formula $write$
+\end_inset
+
+, то получаем 
+\begin_inset Formula $eventual$
+\end_inset
+
+ 
+\begin_inset Formula $consistency$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+В итоге, когда проектируем распределенную систему, надо выбрать уровень
+ согласованности, который нам необходимо.
+\end_layout
+
+\begin_layout Example*
+Если банкомат не подключен к сети, то необходимо сделать выбор: банк идет
+ на поступок --- идет упор на доступность, а если баланс ушел в нуль, то
+ мы потом будем начислять проценты (из-за своей несогласованности).
+\end_layout
+
+\begin_layout Standard
+Реальные базы данных редко находятся в одной точки треугольника (обычно
+ идет тонкая настройка относительно необходимой операции).
+\end_layout
+
+\end_body
+\end_document
