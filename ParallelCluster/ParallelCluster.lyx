@@ -6,10 +6,11 @@
 \begin_preamble
 \usepackage{citehack}
 \usepackage[T2A]{fontenc}
-\usepackage[russian]{babel}
 \usepackage{indentfirst}
 \usepackage{cmap}
 \usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.9}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -54,7 +55,7 @@ theorems-ams-extended
 \use_package stmaryrd 1
 \use_package undertilde 1
 \cite_engine natbib
-\cite_engine_type authoryear
+\cite_engine_type numerical
 \biblio_style plainnat
 \use_bibtopic false
 \use_indices false
@@ -95,12 +96,409 @@ theorems-ams-extended
 Akhtyamov Pavel
 \end_layout
 
+\begin_layout Abstract
+Данный документ представляет электронную версию конспектов лекций 
+\begin_inset Quotes eld
+\end_inset
+
+Параллельные и распределенные вычисления
+\begin_inset Quotes erd
+\end_inset
+
+, которые были прочитаны на третьем курсе ФИВТ МФТИ в 2015 Сальниковым Алексеем
+ Николаевичем и Прокопцевым Дмитрием.
+ Естественно, конспект не претендует на полноту.
+ О дополнениях, неточностях можно сообщать меня по почте 
+\begin_inset CommandInset href
+LatexCommand href
+name "akhtyamovpavel@gmail.com"
+type "mailto:"
+
+\end_inset
+
+ или в ВК 
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+vk.com/akhtyamovpavel
+\end_layout
+
+\end_inset
+
+.
+ Сканированные конспекты первой половины курса 
+\begin_inset Quotes eld
+\end_inset
+
+Параллельные вычисления
+\begin_inset Quotes erd
+\end_inset
+
+ доступны на 
+\begin_inset CommandInset href
+LatexCommand href
+name "yadi.sk/d/SDN10wK1mLAYT"
+target "yadi.sk/d/SDN10wK1mLAYT"
+
+\end_inset
+
+.
+\end_layout
+
 \begin_layout Part
 Параллельные вычисления
 \end_layout
 
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "1"
+key "key-1"
+
+\end_inset
+
+Воеводин В.В, Воеводин В.В.
+ Параллельные вычисления.
+ СПб., БХВ-Петербург, 2002, 608 с.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "2"
+key "key-2"
+
+\end_inset
+
+Воеводин В.В.
+ Вычислительная математика и структура алгоритмов.
+ М.: Изд-во МГУ, 2006, 112 с.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "3"
+key "key-3"
+
+\end_inset
+
+Гергель В.П., Фурсов В.А.
+ Лекции по параллельным вычислениям.
+ Самара: Издательство СГАУ, 2009, 164 с.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "4"
+key "key-4"
+
+\end_inset
+
+Гергель В.П.
+ Теория и практика параллельных вычислений.
+ М.: ИНТУИТ
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "5"
+key "key-5"
+
+\end_inset
+
+Антонов А.С.
+ Параллельное программирование с использованием технологии OpenMP.
+ М.: Изд-во МГУ, 2009, 77 с.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "6"
+key "key-6"
+
+\end_inset
+
+Антонов А.С.
+ Параллальное программирование с использованием технологии MPI.
+ М.: Изд-во МГУ, 2004, 72 с.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "7"
+key "key-7"
+
+\end_inset
+
+Ian Forster.
+ Designing and Building Parallel Programs.
+ The University of Chicago, 1995, 430 p.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "8"
+key "key-8"
+
+\end_inset
+
+William Gropp.
+ Ewing L.
+ Lusk, Anthony Skjellum.
+ Using MPI – Portable Parallel Programming with the Message–Passing Interface.
+ MIT press, 2014, 336 pp.
+ (последняя версия, найденная мной в Интернете)
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "9"
+key "key-9"
+
+\end_inset
+
+William Gropp, Ewing L.
+ Lusk, Rajeev Thakur.
+ Using MPI-2: Advanced Features of the Message Passing Interface.
+ MIT Press, 1999, 406 pp.
+\end_layout
+
 \begin_layout Section
 Характеристики параллельных программ
+\end_layout
+
+\begin_layout Standard
+В данном разделе рассмотрим, каким образом может быть оценена скорость/производи
+тельность той или иной программы.
+\end_layout
+
+\begin_layout Standard
+Обозначим через 
+\begin_inset Formula $T(n)$
+\end_inset
+
+ время выполнения параллельной программы на 
+\begin_inset Formula $n$
+\end_inset
+
+ процессорах.
+ Через 
+\begin_inset Formula $T(1)^{*}$
+\end_inset
+
+ обозначим время выполнения последовательного алгоритма (без инструментов
+ распараллеливания).
+\end_layout
+
+\begin_layout Standard
+Выделим четыре основных параметра для оценки программы:
+\end_layout
+
+\begin_layout Enumerate
+Ускорение --- величина, равная 
+\begin_inset Formula $S(n)=\frac{T(1)}{T(n)}$
+\end_inset
+
+, причем желательно измерять следующую характеристику: 
+\begin_inset Formula $S(n)^{*}=\frac{T(1)^{*}}{T(n)}$
+\end_inset
+
+ для правильной оценки работы алгоритма.
+ Несложно заметить, что 
+\begin_inset Formula $S(n)^{*}=S(n)\cdot\frac{T(1)^{*}}{T(1)}$
+\end_inset
+
+, где второй множитель характеризует замедление программы, связанные с накладным
+и расходами.
+ Далее будем подразумевать под 
+\begin_inset Formula $S(n)$
+\end_inset
+
+ величину 
+\begin_inset Formula $S(n)^{*}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Масштабируемость программы --- величина 
+\begin_inset Formula $\underset{n\in\mathbb{N}}{sup}\{S(n)\ge2\}$
+\end_inset
+
+, которая показывает способность получать ускорение с ростом числа процессоров
+ (но не размера задачи).
+\end_layout
+
+\begin_layout Enumerate
+Слабая масштабируемость программы --- величина, аналогичная масштабируемости
+ программы, в случае роста задачи пропорциональну числу задействованных
+ процессов (иными словами, способность сохранять ускорение при неизменном
+ объёме задачи на 
+\series bold
+каждый узел процессора
+\series default
+).
+\end_layout
+
+\begin_layout Enumerate
+Эффективность --- величина, равная 
+\begin_inset Formula $E(p)=\frac{S(p)}{p}$
+\end_inset
+
+.
+ Данная характеристика показывает полноту использования ресурсов на каждой
+ машине (замедляющим фактором, в данном случае, могут быть, к примеру, накладные
+ расходы на передачу данных).
+ Несложно заметить, что по теоретическим рассчетам величина 
+\begin_inset Formula $S(p)$
+\end_inset
+
+ не превосходит 1.
+ Однако возможен случай сверхлинейного ускорения, при котором 
+\begin_inset Formula $S(p)>1$
+\end_inset
+
+.
+ К примеру, такая ситуация может зависить от устройства железа (устройства
+ кеша --- больше данных теперь может быть разложено по кешам на параллельно
+ работающих системах и т.п.).
+ Но при этом может сложиться парадоксальная ситуация: КПД паровоза при больших
+ нагрузках может стать больше, чем КПД суперкомпьютера/кластера (ибо возможны
+ многочисленные промахи по кешам (cash miss), проблемы в передаче сообщений
+ в системе 
+\begin_inset Formula $interconnect$
+\end_inset
+
+ и т.п.).
+ Как видно из перечисленного выше, главной задачей для дизайнеров архитектуры
+ является настройка железа для максимального использования ресурсов.
+\end_layout
+
+\begin_layout Standard
+Далее опишем, как может меняться производительность в зависимости от числа
+ процессоров при помощи следующего графика (немного неаккуратно, но суть
+ отображает):
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{tikzpicture} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{axis} [
+\end_layout
+
+\begin_layout Plain Layout
+
+	  samples=1000,
+\end_layout
+
+\begin_layout Plain Layout
+
+	  legend pos = north west,
+\end_layout
+
+\begin_layout Plain Layout
+
+      xmin = 0,
+\end_layout
+
+\begin_layout Plain Layout
+
+	  xmax = 20,
+\end_layout
+
+\begin_layout Plain Layout
+
+		ymin=0
+\end_layout
+
+\begin_layout Plain Layout
+
+] 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+addplot[draw=red] file{linear_plot.txt};
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+addplot[dashed, draw=blue] file{efficiency_plot.csv};
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{axis} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{tikzpicture}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Из него видно, что сначала идут накладные расходы на запуск программы и
+ пересылку начальных данных, далее идёт сдвиг в сторону идеальной прямой
+ и даже сверхлинейное ускорение.
+ Впоследствии система получает небольшое ускорение, достигает предела вычислител
+ьной системы (или входных данных, зависит от задачи), а далее получаем значитель
+ное падение засчёт накладных расходов.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+bigskip
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Далее рассмотрим на примере закона Амдала более подробную оценку эффективности
+ системы.
 \end_layout
 
 \begin_layout Standard
@@ -205,7 +603,7 @@ Akhtyamov Pavel
 \end_layout
 
 \begin_layout Enumerate
-Накладные расходы на вход/выход.
+Накладные расходы на ввод/вывод.
 \end_layout
 
 \begin_layout Example*
@@ -1195,6 +1593,12 @@ newpage
 
 \begin_layout Part
 Распределенные вычисления (Дмитрий Прокопцев, dprokoptsev@gmail.com)
+\end_layout
+
+\begin_layout Standard
+Основным источником литературы является конспект лекций, аудиозаписей и
+ некоторых видеозаписей.
+ Дополнительно информацию можно искать при помощи Google.
 \end_layout
 
 \begin_layout Section
